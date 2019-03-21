@@ -12,8 +12,6 @@
 
 long long getMemUsage();
 
-int validateArgs(const int argc, const char **argv);
-
 Node * test_construction(void);
 void test_dfs(Node *node);
 void test_bwt(Node *node);
@@ -52,25 +50,7 @@ long long getMemUsage() {
 	return (physMemUsed + virtMemUsed);
 }
 
-// validate user input to continue, etc..
-// return 0 for success, -1 for failure
-int validateArgs(const int argc, const char **argv) {
-	if (argc < 3) {
-		printf("\nERROR: Please check your input.\n");
-		printf("Format: <test executable> <input fasta> <input alphabet>\n\n");
-		return -1;
-	}
 
-	printf("\nPlease verify the following information:\n\n");
-	printf("Input File:\t%s\n", argv[1]);
-	printf("Input Alph:\t%s\n", argv[2]);
-
-	printf("\nIf any of this is wrong, press Ctrl+C to panic.\nOtherwise press ENTER to continue...");
-	getchar();
-	return (0);
-}
-
-//
 int setUp(const char ** argv) {
 
 	char inputname[64];
@@ -236,10 +216,14 @@ int main (int argc, const char *argv[])
 	// set initial memory usage
 	startMem = getMemUsage();
 
-	// call some data validation first
-	if (validateArgs(argc, argv) < 0) {
+	if (argc < 3) {
+		printf("\nERROR: Incorrect number of arguments.\n");
 		return -1;
 	}
+
+	printf("\nThe arguments are:\n\n");
+	printf("Input File:\t%s\n", argv[1]);
+	printf("Input Alphabet:\t%s\n", argv[2]);
 
 	// read in stuf if all validation went correctly
 	gettimeofday(&tstart, NULL);

@@ -1,15 +1,10 @@
 #ifndef header
 #define header
 
-
-/* ---------- INCLUDES ---------- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-
-/* ---------- DEFINITIONS ------- */
 
 unsigned int alphabetLen = 0;
 unsigned int inputLen = 0;
@@ -35,9 +30,6 @@ typedef struct Node{		// ananth complete
 	struct Node *suffixLink;
 	struct Node **children;
 }Node;
-
-
-/* ---------- PROTOTYPES -------- */
 
 int addChild( Node *parent, Node *child );
 
