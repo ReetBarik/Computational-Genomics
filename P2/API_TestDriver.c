@@ -9,7 +9,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-/* ---------- PROTOTYPES -------- */	// testing driver prototypes go here...
 
 long long getMemUsage();
 
