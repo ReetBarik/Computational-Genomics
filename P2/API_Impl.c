@@ -1,5 +1,13 @@
 #include "API_Header.h"
 
+/*  TODO :
+    1. Keep aglobal count of # of charecters comparisions(<= n)
+    2. Deepest Internal node in th ST will give the longest repeat of the ST
+
+      */
+
+
+
 // add a child to the given node and sort the children alphabetically
 int addChild( Node *parent, Node *child ){
 	unsigned int i=0,j=0;
