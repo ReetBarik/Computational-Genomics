@@ -1,9 +1,5 @@
-/* ---------- INCLUDES ---------- */
-
 #include "API_Header.h"
 
-
-/* ---------- FUNCTION DEFS ----- */
 // add a child to the given node and sort the children alphabetically
 int addChild( Node *parent, Node *child ){
 	unsigned int i=0,j=0;

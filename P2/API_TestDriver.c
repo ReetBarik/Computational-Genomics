@@ -1,5 +1,3 @@
-/* ---------- INCLUDES ---------- */
-
 #include "API_Impl.c"
 #include "API_Header.h"
 
@@ -8,46 +6,50 @@
 #include <sys/sysinfo.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
-long long getMemUsage();
 
-Node * test_construction(void);
-void test_dfs(Node *node);
-void test_bwt(Node *node);
+int get_memory_usage_kb(long* vmrss_kb, long* vmsize_kb)
+{
+    /* Get the the current process' status file from the proc filesystem */
+    FILE* procfile = fopen("/proc/self/status", "r");
 
-double double_time(struct timeval *atime);
-double diff_time(struct timeval *tstart, struct timeval *tstop);
+    long to_read = 8192;
+    char buffer[to_read];
+    int read = fread(buffer, sizeof(char), to_read, procfile);
+    fclose(procfile);
 
-void cleanupTime(void);
+    short found_vmrss = 0;
+    short found_vmsize = 0;
+    char* search_result;
 
-/* ---------- DEFINITIONS ------- */
+    /* Look through proc status contents line by line */
+    char delims[] = "\n";
+    char* line = strtok(buffer, delims);
 
-struct sysinfo memInfo;
+    while (line != NULL && (found_vmrss == 0 || found_vmsize == 0) )
+    {
+        search_result = strstr(line, "VmRSS:");
+        if (search_result != NULL)
+        {
+            sscanf(line, "%*s %ld", vmrss_kb);
+            found_vmrss = 1;
+        }
 
+        search_result = strstr(line, "VmSize:");
+        if (search_result != NULL)
+        {
+            sscanf(line, "%*s %ld", vmsize_kb);
+            found_vmsize = 1;
+        }
 
-/* ---------- FUNCTION DEFS ----- */	// testing driver function definitions go here...
+        line = strtok(NULL, delims);
+    }
 
-// get total physical memory used in Kib
-long long getMemUsage() {
-	int info = sysinfo(&memInfo);
-	if (info == EFAULT)
-	{
-		printf("\nERROR: Invalid system info call.");
-		return -1;
-	}
-
-	long long physMemUsed = memInfo.totalram;
-	physMemUsed -= memInfo.freeram;
-	physMemUsed *= (memInfo.mem_unit / 1024);
-	//printf("PRAM:\t%llu\n", physMemUsed);
-
-	long long virtMemUsed = memInfo.totalswap;;
-	virtMemUsed -= memInfo.freeswap;
-	virtMemUsed *= (memInfo.mem_unit / 1024);
-	//printf("VRAM:\t%llu\n", virtMemUsed);
-
-	return (physMemUsed + virtMemUsed);
+    return (found_vmrss == 1 && found_vmsize == 1) ? 0 : 1;
 }
 
 
@@ -161,60 +163,29 @@ int setUp(const char ** argv) {
 }
 
 
-// run construction
-Node * test_construction()
-{
-	// construct()
-	return (suffixTree());
-}
-
-// run enumerate
-void test_dfs(Node *node)
-{
-	// enumerate()
-	int test = dfs(node);
-	//return (0);
-}
-
-// run bwt
-void test_bwt(Node *node)
-{
-	printf("\nBWT:\t");
-	int test = bwt(node);
-	printf("\n");
-	//return (0);
-}
-
-
-// convert time to some double ms
 double double_time(struct timeval *atime)
 {
 	return ((atime->tv_sec + (atime->tv_usec/1000000.0)) * 1000.0);
 }
 
-// get difference of time
 double diff_time(struct timeval *tstart, struct timeval *tstop)
 {
 	return (double_time(tstop) - double_time(tstart));
 }
 
-// cleanup mess
 void cleanupTime(void) {
 	free(ibuff);
 	free(abuff);
 }
 
-// where it all starts
 int main (int argc, const char *argv[])
 {
 	struct timeval tstart, tstop;
 
-	long long startMem, setupMem, constructMem, dfsMem, bwtMem = 0;
+	long vmrss, vmsize, startMem, endMem;
 
-	Node *testTree;
+	Node *tree;
 
-	// set initial memory usage
-	startMem = getMemUsage();
 
 	if (argc < 3) {
 		printf("\nERROR: Incorrect number of arguments.\n");
@@ -225,53 +196,27 @@ int main (int argc, const char *argv[])
 	printf("Input File:\t%s\n", argv[1]);
 	printf("Input Alphabet:\t%s\n", argv[2]);
 
-	// read in stuf if all validation went correctly
-	gettimeofday(&tstart, NULL);
-	if (setUp(argv) < 0) {
-		printf("\nERROR: something went wrong.\n");
-		return -1;
-	}
-	gettimeofday(&tstop, NULL);
-	setupMem = getMemUsage();
-
-	printf("\nInput memory time: \t%f (ms)\n", diff_time(&tstart, &tstop));
-	printf("Input memory space:\t%llu (Kib)\n", setupMem - startMem);
-	printf("Press ENTER to continue...");
-	getchar();
-
-	// suffix tree construction
-	startMem = getMemUsage();
-	gettimeofday(&tstart, NULL);
-	testTree = test_construction();		// build ST
-	gettimeofday(&tstop, NULL);
-	constructMem = getMemUsage();
-	printf("\nST Construction Time: %f ms\n", diff_time(&tstart, &tstop));
-	printf("ST Construction Space: \t%llu (Kib)\n", constructMem - startMem);
-
-	// depth first search
-	gettimeofday(&tstart, NULL);
-	//test_dfs(testTree);
-	printf("Max Depth: %d\n", maxDepth);
-	gettimeofday(&tstop, NULL);
-	printf("\nST DFS: %f ms\n", diff_time(&tstart, &tstop));
-	getchar();
 	
-	// burrows wheeler transform
+	if (setUp(argv) < 0) 
+		return -1;
+	
+	
+	get_memory_usage_kb(&vmrss, &vmsize);
+    startMem = vmrss;
 	gettimeofday(&tstart, NULL);
-	printf("\nSEQ:\t");
-	//for ( unsigned int it = 0; it < inputLen; ++it)
-//		printf("%c ", ibuff[it]);
-	test_bwt(testTree);	
+	tree = suffixTree();		// build ST
 	gettimeofday(&tstop, NULL);
-	printf("\nST BWT: %f ms\n\n", diff_time(&tstart, &tstop));
+    get_memory_usage_kb(&vmrss, &vmsize);
+	endMem = vmrss;
+	printf("\nST Construction Time: %f ms\n", diff_time(&tstart, &tstop));
+	printf("ST Construction Space: \t%6ld (KB)\n", endMem - startMem);
 
-	dfs(testTree);
+	
+	//test_bwt(tree);	
 
-	doNotBeLikeFirefox(testTree);
+	//dfs(tree);
+
+	doNotBeLikeFirefox(tree);
 	cleanupTime();
-
-	//printf("PRAM:\t%llu\n", getPhysMem());
-	//printf("VRAM:\t%llu\n", getVirtMem());
-
 	return (0);
 }
