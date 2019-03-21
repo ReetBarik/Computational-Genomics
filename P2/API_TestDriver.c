@@ -204,7 +204,7 @@ int main (int argc, const char *argv[])
 	get_memory_usage_kb(&vmrss, &vmsize);
     startMem = vmrss;
 	gettimeofday(&tstart, NULL);
-	tree = suffixTree();		// build ST
+	tree = buildTree();		// build ST
 	gettimeofday(&tstop, NULL);
     get_memory_usage_kb(&vmrss, &vmsize);
 	endMem = vmrss;
@@ -212,9 +212,9 @@ int main (int argc, const char *argv[])
 	printf("ST Construction Space: \t%6ld (KB)\n", endMem - startMem);
 
 	
-	//test_bwt(tree);	
-
-	//dfs(tree);
+	/* bwt(tree);	
+	printf("\n");
+	dfs(tree); */
 
 	doNotBeLikeFirefox(tree);
 	cleanupTime();

@@ -40,18 +40,16 @@ Node *matchChild( Node *n, unsigned int suffix, unsigned int *i );
 
 Node *splitEdge( Node *current, unsigned int head, unsigned int tail);
 
-Node *ananthFindPath( Node *v, unsigned int head );
+Node *findPath( Node *v, unsigned int head );
 
-Node *ananthNodeHops( Node *vPrime, Node *u, unsigned int bHead,
+Node *nodeHops( Node *vPrime, Node *u, unsigned int bHead,
 		unsigned int bTail, unsigned int suffix);
 
-int identifyCase( Node *root, Node *u );
-
-Node *nodeHop( Node *n, unsigned int head, unsigned int tail);
+Node *hop( Node *n, unsigned int head, unsigned int tail);
 
 Node *insert( unsigned int i, Node *root, Node *leaf );
 
-Node *suffixTree( void );
+Node *buildTree();
 
 int dfs( Node *node );
 

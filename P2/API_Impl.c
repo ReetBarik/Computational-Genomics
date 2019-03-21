@@ -22,17 +22,18 @@ int addChild( Node *parent, Node *child ){
 }
 
 // constructor for creating a node
-Node *makeNode( unsigned int id, Node *parent,
-		unsigned int suffixHead, unsigned int suffixTail, unsigned int stringDepth ){
+Node *makeNode(unsigned int id, Node *parent,unsigned int suffixHead,unsigned int suffixTail,unsigned int stringDepth ){
+	
 	Node *newnode = (Node *)malloc(sizeof(Node));
 	if (newnode == NULL) {
-		printf("\nERROR: could not malloc new node\n");
+		printf("\nERROR: Could not allocate memory for new node\n");
 		exit (1);
 	}
 	if (suffixHead > suffixTail){
-		printf("Error making node %d Head %d Tail %d", id, suffixHead, suffixTail);
+		printf("Error: Could not make Node with ID: %d", id);
 		exit (-1);
 	}
+
 	newnode->id = id;
 	newnode->suffixLink = NULL;
 	newnode->parent = parent == NULL ? newnode : parent;
@@ -89,84 +90,16 @@ Node *splitEdge( Node *current, unsigned int head, unsigned int tail ){
 			return (newLeaf);
 		}
 	}
-	perror("splitEdge\n");
+	perror("ERROR: Couldn't split edge\n");
 	exit(1);
 	return (current);
 }
 
-Node *ananthFindPath( Node *v, unsigned int head ){
-	unsigned int childNum, tail = inputLen -1;
-	Node *hopped = nodeHop(v, head, inputLen -1);
-	unsigned int hops = hopped->depth - v->depth;
-	Node *child = matchChild(hopped, head+hops, &childNum);
-	if ( child == NULL){
-		child = makeNode(leafs, hopped,
-				head + hops, tail,
-				hopped->depth + (tail - head)+1);
-		addChild(hopped, child);
-		leafs++;
-	} else { // a child exists
-		child = splitEdge(child, head + hops, tail);
-	}
-	return child;
-}
-
-Node *ananthNodeHops(Node *vPrime, Node *u, unsigned int bHead,
-		unsigned int bEnd, unsigned int suffix){
-	unsigned int r = 0, childNum = 0, bLen = (bEnd - bHead + 1);
-	Node *currNode = vPrime;
-	Node *e = NULL, *i = NULL, *v = NULL;
-
-	while(r <= (bLen)){ // r <= beta len
-		// let e be the edge under currnode that starts with the character b[r]
-		e = matchChild(currNode, bHead+r, &childNum);
-		if(e){ // if e exists
-			unsigned int edgeLen = (e->suffixTail - e->suffixHead + 1);
-			if( edgeLen + r > bLen ){
-				i = splitEdge(e, suffix + currNode->depth, inputLen -1);
-				// possibly suffix + e->parent->depth
-				//i = ananthFindPath(e, suffix);
-				v = i->parent;
-				u->suffixLink = v;
-				return i;
-			} else if( edgeLen+r == bLen ){
-				v = e;
-				u->suffixLink = v;
-				unsigned int k = u->depth;
-				i = ananthFindPath(v, suffix + k -1);
-				return i;
-			} else {
-				r += edgeLen;
-				currNode = e;
-				continue;
-			}
-		} else {
-			printf("NO EDGE IN ANANTHNODEHOPS: %s\n", &ibuff[suffix]);
-			exit(-1);
-		}
-	}
-	return i;
-}
-
-
-// find the type of node to insert
-int identifyCase( Node *root, Node *u ){
-	if( u->suffixLink != NULL )
-		if ( u != root )			// case IA
-			return (0);
-		else 						// case IB
-			return (1);
-	else if ( u->parent != root )	// case IIA
-		return (2);
-	else							// case IIB
-		return (3);
-	return (-1);
-}
 
 // given a node and a suffix find the end of the suffix by traversing down
 // returns the parent that mismatches
-Node *nodeHop( Node *n,unsigned int head, unsigned int tail){ 
-	unsigned int numChild = 0, i = 0, x, y, min;
+Node *hop( Node *n,unsigned int head, unsigned int tail){ 
+	int numChild = 0, i = 0, min;
 	Node *a = matchChild(n, head, &numChild);
 	// if there isnt a child that matches return that node
 	if( a == NULL){
@@ -176,92 +109,137 @@ Node *nodeHop( Node *n,unsigned int head, unsigned int tail){
 	}
 	//x = (int)strlen(beta);
 	//y = (int)strlen(a->parentEdgeLabel);
-	x = tail - head + 1;
-	y = a->suffixTail - a->suffixHead + 1;
-	min = y ^ ((x ^ y) & -(x < y));
-	for( i = 0; i < min; i++){
+	min = ((tail - head + 1) < (a->suffixTail - a->suffixHead + 1)) ? (tail - head + 1) : (a->suffixTail - a->suffixHead + 1);
+	for(i = 0; i < min; i++){
 		if( ibuff[head + i] != ibuff[a->suffixHead + i] ){
 			return (n);
 		}
 	}
 	// not an ending leaf and the for loop has gone through the string
-	return (nodeHop( a, head+i, tail));
+	return (hop( a, head+i, tail));
+}
+
+Node *findPath( Node *v, unsigned int head ){
+	int childNum, tail = inputLen - 1;
+	Node *hopped = hop(v, head, inputLen -1);
+	int hops = hopped -> depth - v -> depth;
+	Node *child = matchChild(hopped, head + hops, &childNum);
+	if ( child == NULL){
+		child = makeNode(leafs, hopped,	head + hops, tail, hopped -> depth + (tail - head) + 1);
+		addChild(hopped, child);
+		leafs ++;
+	} else { // a child exists
+		child = splitEdge(child, head + hops, tail);
+	}
+	return child;
+}
+
+Node *nodeHops(Node *vPrime, Node *u, unsigned int betaHead,	unsigned int betaEnd, unsigned int suffix){
+	unsigned int r = 0, childNum = 0, betaLen = (betaEnd - betaHead + 1);
+	Node *currNode = vPrime;
+	Node *e = NULL, *i = NULL, *v = NULL;
+
+	while(r <= (betaLen)){ // r <= beta len
+		// let e be the edge under currnode that starts with the character b[r]
+		e = matchChild(currNode, betaHead + r, &childNum);
+		if(e){ // if e exists
+			unsigned int edgeLen = (e->suffixTail - e->suffixHead + 1);
+			if( edgeLen + r > betaLen ){ // beta will get exhausted and hence split edge required in the middle of the edge
+				i = splitEdge(e, suffix + currNode->depth, inputLen - 1);
+				v = i -> parent;
+				u -> suffixLink = v;
+				return i;
+			} else if( edgeLen + r == betaLen ){ // end of beta and end of edge coincides
+				v = e;
+				u->suffixLink = v;
+				unsigned int k = u->depth;
+				i = findPath(v, suffix + k -1);
+				return i;
+			} else { // edge will exhausted and beta will overflow to the next edge 
+				r += edgeLen;
+				currNode = e;
+				continue;
+			}
+		} else { // this case shouldn't arise as leaf formation is taken care of by splitEdge
+			printf("ERROR: Don't know why this error occurs");
+			exit(-1);
+		}
+	}
+	return i;
 }
 
 
 Node *insert( unsigned int i, Node *root, Node *leaf ){
-	// ananth is right we are wrong
-	if (leaf == NULL){
-		printf("ERROR Leaf returned null: i = %d",i);
+
+/* 	if (leaf == NULL){
+		printf("ERROR: Leaf returned null: i = %d",i);
 		return (NULL);
-	}
+	} */
 	Node *u = leaf->parent;
-	int c = identifyCase( root, u );
-	switch(c){
-		// IA suffix link for u is known and u is not the root
+	int Case = -1;
+
+	if( u->suffixLink != NULL )
+		if ( u != root )			// case IA
+			Case = 0;
+		else 						// case IB
+			Case = 1;
+	else if ( u->parent != root )	// case IIA
+			Case = 2;
+	else							// case IIB
+		Case = 3;
+
+	switch(Case){
+		// IA: suffix link for u is known and u is not the root
 		case 0:
 			{
-				unsigned int k = u->depth;
-				Node *v = u->suffixLink;
-
-                //TODO: Redundant checking
-				if (v->id == 0){
-					return ananthFindPath(v, i);
-				} else {
-					return ananthFindPath(v, i + k-1); 
-				}
-				break;
-			}
-			// IB suffix link for u is known and u is the root
-		case 1:
-			{
-				return ananthFindPath(u, i);
-				break;
-			}
-			// IIA suffix link for u is unknown and u' is not the root
-		case 2:
-			{
-				//unsigned int j=0;
-				Node *uPrime = u->parent;
-				unsigned int bHead = u->suffixHead, bTail = u->suffixTail;
-				Node *vPrime = uPrime->suffixLink;
-				return ananthNodeHops(vPrime, u, bHead, bTail, i);
-				break;
-			}
-			// IIB suffix link for u is unknown and u' is the root
-		case 3:
-			{
-				Node *uPrime = u->parent;
-				unsigned int bHead = u -> suffixHead, bTail = u -> suffixTail;
-				unsigned int bPrimeHead = bHead + 1;
-				if (bTail == bHead){ // the lenght of u is 0
-					u->suffixLink = uPrime;
-					return ananthFindPath(uPrime, i);
-				} else{
-					return ananthNodeHops(uPrime, u, bPrimeHead, bTail, i);
-				}
-				//if (bPrimeHead > bTail){
-				//	bPrimeHead = i;
-				//	bTail = inputLen - 1;
+				int cAlphaLen = u -> depth;
+				Node *v = u -> suffixLink;
+				return findPath(v, i + cAlphaLen - 1); 
 				//}
 				break;
 			}
+		// IB: suffix link for u is known and u is the root
+		case 1:
+			{
+				return findPath(u, i);
+				break;
+			}
+		// IIA: suffix link for u is unknown and u' is not the root
+		case 2:
+			{
+				Node *uPrime = u -> parent;
+				int betaHead = u -> suffixHead, betaTail = u -> suffixTail; //betaHead to betaTail contains Beta
+				Node *vPrime = uPrime -> suffixLink;
+				return nodeHops(vPrime, u, betaHead, betaTail, i);
+				break;
+			}
+		// IIB: suffix link for u is unknown and u' is the root
+		case 3:
+			{
+				Node *uPrime = u -> parent;
+				int betaHead = u -> suffixHead, betaTail = u -> suffixTail; //betaHead to betaTail contains Beta
+				int betaPrimeHead = betaHead + 1;                              //betaPrimeHead to betaTail contains BetaPrime
+				if (betaTail == betaHead){ // the lenght of u is 1
+					u -> suffixLink = uPrime;
+					return findPath(uPrime, i);
+				} else {
+					return nodeHops(uPrime, u, betaPrimeHead, betaTail, i);
+				}
+				break;
+			}
 		default:
-			perror("Exiting in insert\n");
+			printf("ERROR: Couldn't insert\n");
 			exit(1);
-			break;
 	}
 	return 0;
 }
 
 
-Node *suffixTree( void ){
+Node *buildTree(){
 	Node *root = makeNode(0, NULL, 0, 0, 0);
-	root->suffixLink = root;
+	root -> suffixLink = root;
 	Node *leaf = root;
-	unsigned int i;
-	for( i=0; i < inputLen; i++ ){
-		//leaf = insert( &input[i], root, leaf);
+	for(int i=0; i < inputLen; i++ ){
 		leaf = insert( i, root, leaf);
 		if (leaf == NULL)
 			return NULL;
@@ -275,6 +253,7 @@ int dfs( Node *node ){
 	unsigned int i;
 	printf("Depth: %d\t", node->depth);
 	printf("NID: %d\t", node->id);
+	printf("Size of node: %ld\t", sizeof(node));
 	if ( node != NULL ) {
 		printf("Parent: %d\t", node->parent->id);
 		//printf("EdgeLabel: %s\t", node->parentEdgeLabel);
