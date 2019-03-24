@@ -5,22 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-unsigned int alphabetLen = 0;
-unsigned int inputLen = 0;
-unsigned int inodes = 0;
-unsigned int leafs = 1;
-unsigned int maxDepth = 0;
-
-char *abuff;
-char *ibuff;
-char iname[16];
-
-typedef int bool;
-enum { false, true };		// get mad, this is worth it
-
-
-typedef struct Node{		// ananth complete
+typedef struct Node{		
 	unsigned int id;
 	unsigned int depth;
 	unsigned int numChildren;
@@ -31,30 +16,25 @@ typedef struct Node{		// ananth complete
 	struct Node **children;
 }Node;
 
-int addChild( Node *parent, Node *child );
+unsigned int alphabetLen = 0;
+unsigned int inputLen = 0;
+unsigned int inodes = 0;
+unsigned int leafs = 1;
+unsigned int maxDepth = 0;
+unsigned int stringDepth = 0;
+Node *maxDepthNode = NULL;
 
-Node *makeNode( unsigned int id, Node *parent,
-		unsigned int suffixHead, unsigned int suffixTail, unsigned int Depth );
+char *abuff;
+char *ibuff;
+char iname[16];
 
-Node *matchChild( Node *n, unsigned int suffix, unsigned int *i );
-
-Node *splitEdge( Node *current, unsigned int head, unsigned int tail);
-
-Node *findPath( Node *v, unsigned int head );
-
-Node *nodeHops( Node *vPrime, Node *u, unsigned int bHead,
-		unsigned int bTail, unsigned int suffix);
-
-Node *hop( Node *n, unsigned int head, unsigned int tail);
-
-Node *insert( unsigned int i, Node *root, Node *leaf );
 
 Node *buildTree();
 
 int dfs( Node *node );
 
-int bwt( Node *node );
+int dfs_children( Node *node );
 
-void doNotBeLikeFirefox( Node *node );
+int bwt( Node *node );
 
 #endif	

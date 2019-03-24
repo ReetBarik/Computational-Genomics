@@ -173,16 +173,85 @@ double diff_time(struct timeval *tstart, struct timeval *tstop)
 	return (double_time(tstop) - double_time(tstart));
 }
 
-void cleanupTime(void) {
+void deallocateMemory(Node *node) {
 	free(ibuff);
 	free(abuff);
+	unsigned int i;//,j;
+	if (node){
+		for(i=0; i < node->numChildren; i++){
+			deallocateMemory(node->children[i]);
+		}
+		//for(j=0;j<alphabetLen;j++)
+		//	free(node->children[j]);
+		//	node->children[j] = NULL;
+		free(node->children);
+		free(node);
+	}
 }
+
+
+/* void exactMatchingRepeat() {
+	
+	Node *n = maxDepthNode;
+	while(n -> parent -> id != 0){
+		n = n -> parent;
+	}
+
+	printf("Exact Matching Repeat: ");
+	for (int i = n -> suffixHead; i <= maxDepthNode -> suffixTail; i++){
+		printf("%c", ibuff[i]);
+	}
+	printf("\n");
+} */
+
+void exactMatchingRepeat() {
+	int i;
+	Node *n = maxDepthNode -> children[0];
+	printf("Exact Matching Repeat: ");
+	for (i = n -> id - 1; i < maxDepthNode -> depth + n -> id - 1; i++){
+		printf("%c", ibuff[i]);
+	}
+	printf("\n");
+	printf("Exact Matching Repeat positions: ");
+	for (i = 0; i < maxDepthNode -> numChildren; i++){
+		printf("%d, ", maxDepthNode -> children[i] -> id);
+	}
+	printf("\n");
+}
+
+
+void printStatistics(Node *tree) {
+
+	struct timeval tstart, tstop;
+	long vmrss, vmsize, startMem, endMem;
+
+	get_memory_usage_kb(&vmrss, &vmsize);
+    startMem = vmrss;
+	gettimeofday(&tstart, NULL);
+	tree = buildTree();		// build ST
+	gettimeofday(&tstop, NULL);
+    get_memory_usage_kb(&vmrss, &vmsize);
+	endMem = vmrss;
+	printf("\nSUFFIX TREE CONSTRUCTION STATISTICS:\n");
+	printf("\nInput size: %ld\n", inputLen * sizeof(char));
+	printf("Suffix Tree Construction Time: %f (ms)\n", diff_time(&tstart, &tstop));
+	printf("Suffix Tree Construction Space: %6ld (KB)\n", endMem - startMem);
+	printf("Number of internal nodes: %d\n", inodes + 1);
+	printf("Number of leafs: %d\n", leafs - 1);
+	printf("Total number of nodes: %d\n", inodes + leafs);
+	printf("Size of the tree: %ld (bytes)\n", (inodes + leafs) * sizeof(tree));
+	printf("Average string depth of internal nodes: %d\n", (stringDepth / (inodes + 1)));
+	printf("String depth of deepest internal node: %d\n", maxDepth);
+	exactMatchingRepeat();
+
+	/* bwt(tree);	
+	printf("\n");
+	dfs(tree); */
+}
+
 
 int main (int argc, const char *argv[])
 {
-	struct timeval tstart, tstop;
-
-	long vmrss, vmsize, startMem, endMem;
 
 	Node *tree;
 
@@ -199,24 +268,9 @@ int main (int argc, const char *argv[])
 	
 	if (setUp(argv) < 0) 
 		return -1;
-	
-	
-	get_memory_usage_kb(&vmrss, &vmsize);
-    startMem = vmrss;
-	gettimeofday(&tstart, NULL);
-	tree = buildTree();		// build ST
-	gettimeofday(&tstop, NULL);
-    get_memory_usage_kb(&vmrss, &vmsize);
-	endMem = vmrss;
-	printf("\nST Construction Time: %f ms\n", diff_time(&tstart, &tstop));
-	printf("ST Construction Space: \t%6ld (KB)\n", endMem - startMem);
 
-	
-	/* bwt(tree);	
-	printf("\n");
-	dfs(tree); */
+	printStatistics(tree);
 
-	doNotBeLikeFirefox(tree);
-	cleanupTime();
+	deallocateMemory(tree);
 	return (0);
 }

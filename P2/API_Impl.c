@@ -1,35 +1,6 @@
 #include "API_Header.h"
 
-/*  TODO :
-    1. Keep aglobal count of # of charecters comparisions(<= n)
-    2. Deepest Internal node in th ST will give the longest repeat of the ST
 
-      */
-
-
-
-// add a child to the given node and sort the children alphabetically
-int addChild( Node *parent, Node *child ){
-	unsigned int i=0,j=0;
-	parent->children[parent->numChildren] = child;
-	parent->numChildren++;
-	child->parent = parent;
-	// sort the children
-	Node *temp;
-	for( i=0; i < parent->numChildren - 1; ++i ){
-		for( j=0; j < parent->numChildren - 1 - i; ++j ){
-			if( ibuff[parent->children[j]->suffixHead] >
-					ibuff[parent->children[j+1]->suffixHead]) {
-				temp = parent->children[j+1];
-				parent->children[j+1] = parent->children[j];
-				parent->children[j] = temp;
-			}
-		}
-	}
-	return (0);
-}
-
-// constructor for creating a node
 Node *makeNode(unsigned int id, Node *parent,unsigned int suffixHead,unsigned int suffixTail,unsigned int stringDepth ){
 	
 	Node *newnode = (Node *)malloc(sizeof(Node));
@@ -54,45 +25,62 @@ Node *makeNode(unsigned int id, Node *parent,unsigned int suffixHead,unsigned in
 }
 
 
+// add a child to the given node and sort the children alphabetically
+void addChild( Node *parent, Node *child ){
+	parent -> children[parent -> numChildren] = child;
+	parent -> numChildren++;
+	child -> parent = parent;
+	// Bubble sort the children
+	Node *temp;
+	for(int i=0; i < parent -> numChildren - 1; ++i ){
+		for(int j=0; j < parent -> numChildren - 1 - i; ++j ){
+			if( ibuff[parent -> children[j] -> suffixHead] > ibuff[parent -> children[j + 1] -> suffixHead]) {
+				temp = parent -> children[j + 1];
+				parent -> children[j + 1] = parent -> children[j];
+				parent -> children[j] = temp;
+			}
+		}
+	}
+	return;
+}
+
+
+
 // find the child that matches the first character of the suffix
 Node *matchChild( Node *n, unsigned int suffix, unsigned int *i ){
 	Node *current = NULL;
 	//at node n check all children's first char
 	//at the child
-	for (*i = 0; *i < n->numChildren && n->numChildren > 0; *i+=1){
-		current = n->children[*i];
-		if (ibuff[current->suffixHead] == ibuff[suffix]){
+	for (*i = 0; *i < n -> numChildren && n -> numChildren > 0; *i+=1){
+		current = n -> children[*i];
+		if (ibuff[current -> suffixHead] == ibuff[suffix]){
 			return (current);
 		}
 	}
+	// No child exists with the first character of suffix
 	return (NULL);
 }
 
 // split the current nodes parent edge with the suffix return the leaf
 Node *splitEdge( Node *current, unsigned int head, unsigned int tail ){
-	unsigned int i = 0, min = 0, x = 0, y = 0, z = 0;
-	matchChild(current->parent, head, &z);
-	x = tail;
-	y = current->suffixTail;
-	min = y ^ ((x ^ y) & -(x < y));
-	for( i = current->suffixHead; i <= tail; ++i ) {//(int)strlen(suffix); ++i ){
-		if( ibuff[i] != ibuff[head + (i-current->suffixHead)] ){
+	unsigned int i = 0, z = 0;
+	matchChild(current -> parent, head, &z);
+	for( i = current -> suffixHead; i <= tail; ++i ) {  //(int)strlen(suffix); ++i ){
+		if( ibuff[i] != ibuff[head + (i - current -> suffixHead)] ){
 
-			Node *newInode = makeNode( inputLen + inodes +1, current->parent,
-					current->suffixHead, i - 1,
-					current->parent->depth + i - current->suffixHead);
-			inodes++;
-			if (newInode->depth > maxDepth){
-				maxDepth = newInode->depth;
+			Node *newInode = makeNode( inputLen + inodes + 1, current -> parent, current -> suffixHead, i - 1, current -> parent -> depth + i - current -> suffixHead);
+			inodes ++;
+			stringDepth += newInode -> depth;
+			if (newInode -> depth > maxDepth){
+				maxDepth = newInode -> depth;
+				maxDepthNode = newInode;
 			}
 			// need to set the current children to the new inodes children
 			addChild(newInode, current);
-			newInode->parent->children[z] = newInode;
-			current->suffixHead = newInode->suffixTail + 1;
+			newInode -> parent -> children[z] = newInode;
+			current -> suffixHead = newInode -> suffixTail + 1;
 			//current->suffixTail = current->suffixTail;
-			Node *newLeaf = makeNode( leafs,
-					newInode, head + newInode->suffixTail - newInode->suffixHead + 1, tail,
-					tail - (head + newInode->suffixTail - newInode->suffixHead) + newInode->depth);
+			Node *newLeaf = makeNode( leafs, newInode, head + newInode -> suffixTail - newInode -> suffixHead + 1, tail, tail - (head + newInode -> suffixTail - newInode -> suffixHead) + newInode -> depth);
 			leafs ++;
 			addChild(newInode, newLeaf);
 			return (newLeaf);
@@ -117,19 +105,19 @@ Node *hop( Node *n,unsigned int head, unsigned int tail){
 	}
 	//x = (int)strlen(beta);
 	//y = (int)strlen(a->parentEdgeLabel);
-	min = ((tail - head + 1) < (a->suffixTail - a->suffixHead + 1)) ? (tail - head + 1) : (a->suffixTail - a->suffixHead + 1);
+	min = ((tail - head + 1) < (a -> suffixTail - a -> suffixHead + 1)) ? (tail - head + 1) : (a -> suffixTail - a -> suffixHead + 1);
 	for(i = 0; i < min; i++){
-		if( ibuff[head + i] != ibuff[a->suffixHead + i] ){
+		if( ibuff[head + i] != ibuff[a -> suffixHead + i] ){
 			return (n);
 		}
 	}
 	// not an ending leaf and the for loop has gone through the string
-	return (hop( a, head+i, tail));
+	return (hop( a, head + i, tail));
 }
 
 Node *findPath( Node *v, unsigned int head ){
 	int childNum, tail = inputLen - 1;
-	Node *hopped = hop(v, head, inputLen -1);
+	Node *hopped = hop(v, head, inputLen - 1);
 	int hops = hopped -> depth - v -> depth;
 	Node *child = matchChild(hopped, head + hops, &childNum);
 	if ( child == NULL){
@@ -142,7 +130,7 @@ Node *findPath( Node *v, unsigned int head ){
 	return child;
 }
 
-Node *nodeHops(Node *vPrime, Node *u, unsigned int betaHead,	unsigned int betaEnd, unsigned int suffix){
+Node *nodeHops(Node *vPrime, Node *u, unsigned int betaHead, unsigned int betaEnd, unsigned int suffix){
 	unsigned int r = 0, childNum = 0, betaLen = (betaEnd - betaHead + 1);
 	Node *currNode = vPrime;
 	Node *e = NULL, *i = NULL, *v = NULL;
@@ -151,16 +139,16 @@ Node *nodeHops(Node *vPrime, Node *u, unsigned int betaHead,	unsigned int betaEn
 		// let e be the edge under currnode that starts with the character b[r]
 		e = matchChild(currNode, betaHead + r, &childNum);
 		if(e){ // if e exists
-			unsigned int edgeLen = (e->suffixTail - e->suffixHead + 1);
+			unsigned int edgeLen = (e -> suffixTail - e -> suffixHead + 1);
 			if( edgeLen + r > betaLen ){ // beta will get exhausted and hence split edge required in the middle of the edge
-				i = splitEdge(e, suffix + currNode->depth, inputLen - 1);
+				i = splitEdge(e, suffix + currNode -> depth, inputLen - 1);
 				v = i -> parent;
 				u -> suffixLink = v;
 				return i;
 			} else if( edgeLen + r == betaLen ){ // end of beta and end of edge coincides
 				v = e;
 				u->suffixLink = v;
-				unsigned int k = u->depth;
+				unsigned int k = u -> depth;
 				i = findPath(v, suffix + k -1);
 				return i;
 			} else { // edge will exhausted and beta will overflow to the next edge 
@@ -226,7 +214,7 @@ Node *insert( unsigned int i, Node *root, Node *leaf ){
 			{
 				Node *uPrime = u -> parent;
 				int betaHead = u -> suffixHead, betaTail = u -> suffixTail; //betaHead to betaTail contains Beta
-				int betaPrimeHead = betaHead + 1;                              //betaPrimeHead to betaTail contains BetaPrime
+				int betaPrimeHead = betaHead + 1;                           //betaPrimeHead to betaTail contains BetaPrime
 				if (betaTail == betaHead){ // the lenght of u is 1
 					u -> suffixLink = uPrime;
 					return findPath(uPrime, i);
@@ -313,20 +301,4 @@ int bwt( Node *node ){
 		printf("%c ", (bwtval > 0 ? ibuff[bwtval-1] : ibuff[inputLen - 1]));
 	}
 	return (0);
-}
-
-
-// free memory
-void doNotBeLikeFirefox( Node *node ) {
-	unsigned int i;//,j;
-	if (node){
-		for(i=0; i < node->numChildren; i++){
-			doNotBeLikeFirefox(node->children[i]);
-		}
-		//for(j=0;j<alphabetLen;j++)
-		//	free(node->children[j]);
-		//	node->children[j] = NULL;
-		free(node->children);
-		free(node);
-	}
 }
