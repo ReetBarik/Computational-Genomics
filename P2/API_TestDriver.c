@@ -233,7 +233,7 @@ void printStatistics(Node *tree) {
     get_memory_usage_kb(&vmrss, &vmsize);
 	endMem = vmrss;
 	printf("\nSUFFIX TREE CONSTRUCTION STATISTICS:\n");
-	printf("\nInput size: %ld\n", inputLen * sizeof(char));
+	printf("\nInput size: %ld\n", sizeof(char *) * strlen(ibuff));
 	printf("Suffix Tree Construction Time: %f (ms)\n", diff_time(&tstart, &tstop));
 	printf("Suffix Tree Construction Space: %6ld (KB)\n", endMem - startMem);
 	printf("Number of internal nodes: %d\n", inodes + 1);
