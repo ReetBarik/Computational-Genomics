@@ -246,8 +246,11 @@ void printStatistics(Node *tree) {
 	exactMatchingRepeat();
 
 	/* bwt(tree);	
+	printf("\n"); */
+	/* printf("Pre-order DFS traversal:\n");
+	dfs(tree); 
 	printf("\n");
-	dfs(tree); */
+	display_children(tree); // to enumerate children of root from left to right */
 }
 
 

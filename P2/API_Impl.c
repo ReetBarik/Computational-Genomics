@@ -1,5 +1,6 @@
 #include "API_Header.h"
 
+int pretty_dfs = 0;
 
 Node *makeNode(int id, Node *parent,int suffixHead,int suffixTail,int stringDepth ){
 	
@@ -247,35 +248,27 @@ Node *buildTree(){
 // depth first search - preorder
 int dfs( Node *node ){
 	int i;
-	printf("Depth: %d\t", node->depth);
-	printf("NID: %d\t", node->id);
-	printf("Size of node: %ld\t", sizeof(node));
-	if ( node != NULL ) {
-		printf("Parent: %d\t", node->parent->id);
-		//printf("EdgeLabel: %s\t", node->parentEdgeLabel);
-		printf("EdgeLabel: ");
-		for(i = node->suffixHead; i <= node->suffixTail; i++){
-			printf("%c", ibuff[i]);
-		}
-		printf("\t");
-	}
-	if( node->suffixLink )
-		printf("SL->ID: %d\n", node->suffixLink->id); //, node->suffixLink);
+	pretty_dfs ++;
+	if (pretty_dfs % 10 == 0) 
+		printf("Depth: %d\n", node->depth);
 	else
-		printf("SL->ID: NULL\n");
-	for ( i = 0; i < node->numChildren; ++i)
+		printf("Depth: %d\t", node->depth);
+	
+	for ( i = 0; i < node -> numChildren; ++i)
 	{
-		dfs(node->children[i]);
+		dfs(node -> children[i]);
 	}
 	return (0);
 }
 
 
-int dfs_children(Node *node){
+int display_children(Node *node){
+	printf("Enumerating children of Node ID: %d from left to right:\n", node -> id);
     for(int i = 0; i < node -> numChildren; i++)
     {
-        dfs(node -> children[i]);
+        printf("Child Number: %d, ID: %d ; ", i, node -> children[i] -> id);
     }
+	printf("\n");
     return 0;
 }
 

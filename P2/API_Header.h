@@ -33,7 +33,7 @@ Node *buildTree();
 
 int dfs( Node *node );
 
-int dfs_children( Node *node );
+int display_children( Node *node );
 
 int bwt( Node *node );
 
