@@ -6,22 +6,22 @@
 #include <string.h>
 
 typedef struct Node{		
-	unsigned int id;
-	unsigned int depth;
-	unsigned int numChildren;
-	unsigned int suffixHead;
-	unsigned int suffixTail;
+	int id;
+	int depth;
+	int numChildren;
+	int suffixHead;
+	int suffixTail;
 	struct Node *parent;
 	struct Node *suffixLink;
 	struct Node **children;
 }Node;
 
-unsigned int alphabetLen = 0;
-unsigned int inputLen = 0;
-unsigned int inodes = 0;
-unsigned int leafs = 1;
-unsigned int maxDepth = 0;
-unsigned int stringDepth = 0;
+int alphabetLen = 0;
+int inputLen = 0;
+int inodes = 0;
+int leafs = 1;
+int maxDepth = 0;
+int stringDepth = 0;
 Node *maxDepthNode = NULL;
 
 char *abuff;

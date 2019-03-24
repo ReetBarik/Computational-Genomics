@@ -64,8 +64,8 @@ int setUp(const char ** argv) {
 	stat(argv[1], &input_st);
 	stat(argv[2], &alpha_st);
 
-	unsigned int input_size = input_st.st_size;
-	unsigned int alpha_size = alpha_st.st_size;
+	int input_size = input_st.st_size;
+	int alpha_size = alpha_st.st_size;
 
 	strcpy(inputname, argv[1]);
 	strcpy(alphaname, argv[2]);
@@ -107,7 +107,7 @@ int setUp(const char ** argv) {
 		return -1;
 	}
 
-	unsigned int i = 0;
+	int i = 0;
 
 	int ibytes = input_size;
 	int abytes = alpha_size;
@@ -176,7 +176,7 @@ double diff_time(struct timeval *tstart, struct timeval *tstop)
 void deallocateMemory(Node *node) {
 	free(ibuff);
 	free(abuff);
-	unsigned int i;//,j;
+	int i;//,j;
 	if (node){
 		for(i=0; i < node->numChildren; i++){
 			deallocateMemory(node->children[i]);

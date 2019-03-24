@@ -1,7 +1,7 @@
 #include "API_Header.h"
 
 
-Node *makeNode(unsigned int id, Node *parent,unsigned int suffixHead,unsigned int suffixTail,unsigned int stringDepth ){
+Node *makeNode(int id, Node *parent,int suffixHead,int suffixTail,int stringDepth ){
 	
 	Node *newnode = (Node *)malloc(sizeof(Node));
 	if (newnode == NULL) {
@@ -47,7 +47,7 @@ void addChild( Node *parent, Node *child ){
 
 
 // find the child that matches the first character of the suffix
-Node *matchChild( Node *n, unsigned int suffix, unsigned int *i ){
+Node *matchChild( Node *n, int suffix, int *i ){
 	Node *current = NULL;
 	//at node n check all children's first char
 	//at the child
@@ -62,8 +62,8 @@ Node *matchChild( Node *n, unsigned int suffix, unsigned int *i ){
 }
 
 // split the current nodes parent edge with the suffix return the leaf
-Node *splitEdge( Node *current, unsigned int head, unsigned int tail ){
-	unsigned int i = 0, z = 0;
+Node *splitEdge( Node *current, int head, int tail ){
+	int i = 0, z = 0;
 	matchChild(current -> parent, head, &z);
 	for( i = current -> suffixHead; i <= tail; ++i ) {  //(int)strlen(suffix); ++i ){
 		if( ibuff[i] != ibuff[head + (i - current -> suffixHead)] ){
@@ -94,7 +94,7 @@ Node *splitEdge( Node *current, unsigned int head, unsigned int tail ){
 
 // given a node and a suffix find the end of the suffix by traversing down
 // returns the parent that mismatches
-Node *hop( Node *n,unsigned int head, unsigned int tail){ 
+Node *hop( Node *n,int head, int tail){ 
 	int numChild = 0, i = 0, min;
 	Node *a = matchChild(n, head, &numChild);
 	// if there isnt a child that matches return that node
@@ -115,7 +115,7 @@ Node *hop( Node *n,unsigned int head, unsigned int tail){
 	return (hop( a, head + i, tail));
 }
 
-Node *findPath( Node *v, unsigned int head ){
+Node *findPath( Node *v, int head ){
 	int childNum, tail = inputLen - 1;
 	Node *hopped = hop(v, head, inputLen - 1);
 	int hops = hopped -> depth - v -> depth;
@@ -130,8 +130,8 @@ Node *findPath( Node *v, unsigned int head ){
 	return child;
 }
 
-Node *nodeHops(Node *vPrime, Node *u, unsigned int betaHead, unsigned int betaEnd, unsigned int suffix){
-	unsigned int r = 0, childNum = 0, betaLen = (betaEnd - betaHead + 1);
+Node *nodeHops(Node *vPrime, Node *u, int betaHead, int betaEnd, int suffix){
+	int r = 0, childNum = 0, betaLen = (betaEnd - betaHead + 1);
 	Node *currNode = vPrime;
 	Node *e = NULL, *i = NULL, *v = NULL;
 
@@ -139,7 +139,7 @@ Node *nodeHops(Node *vPrime, Node *u, unsigned int betaHead, unsigned int betaEn
 		// let e be the edge under currnode that starts with the character b[r]
 		e = matchChild(currNode, betaHead + r, &childNum);
 		if(e){ // if e exists
-			unsigned int edgeLen = (e -> suffixTail - e -> suffixHead + 1);
+			int edgeLen = (e -> suffixTail - e -> suffixHead + 1);
 			if( edgeLen + r > betaLen ){ // beta will get exhausted and hence split edge required in the middle of the edge
 				i = splitEdge(e, suffix + currNode -> depth, inputLen - 1);
 				v = i -> parent;
@@ -148,7 +148,7 @@ Node *nodeHops(Node *vPrime, Node *u, unsigned int betaHead, unsigned int betaEn
 			} else if( edgeLen + r == betaLen ){ // end of beta and end of edge coincides
 				v = e;
 				u->suffixLink = v;
-				unsigned int k = u -> depth;
+				int k = u -> depth;
 				i = findPath(v, suffix + k -1);
 				return i;
 			} else { // edge will exhausted and beta will overflow to the next edge 
@@ -165,7 +165,7 @@ Node *nodeHops(Node *vPrime, Node *u, unsigned int betaHead, unsigned int betaEn
 }
 
 
-Node *insert( unsigned int i, Node *root, Node *leaf ){
+Node *insert( int i, Node *root, Node *leaf ){
 
 /* 	if (leaf == NULL){
 		printf("ERROR: Leaf returned null: i = %d",i);
@@ -246,7 +246,7 @@ Node *buildTree(){
 
 // depth first search - preorder
 int dfs( Node *node ){
-	unsigned int i;
+	int i;
 	printf("Depth: %d\t", node->depth);
 	printf("NID: %d\t", node->id);
 	printf("Size of node: %ld\t", sizeof(node));
@@ -290,7 +290,7 @@ int dfs_children(Node *node){
 
 
 int bwt( Node *node ){
-	unsigned int i;
+	int i;
 	for( i=0; (i < node->numChildren) && (node->children[i] != NULL); i++ ){
 		bwt( node->children[i] );
 	}
