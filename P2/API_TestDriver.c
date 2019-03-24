@@ -220,10 +220,11 @@ void exactMatchingRepeat() {
 }
 
 
-void printStatistics(Node *tree) {
+void printStatistics(Node *tree, char *outputFile) {
 
 	struct timeval tstart, tstop;
 	long vmrss, vmsize, startMem, endMem;
+	char *x = "_BWT.txt";
 
 	get_memory_usage_kb(&vmrss, &vmsize);
     startMem = vmrss;
@@ -245,12 +246,15 @@ void printStatistics(Node *tree) {
 	printf("String depth of deepest internal node: %d\n", maxDepth);
 	exactMatchingRepeat();
 
-	/* bwt(tree);	
-	printf("\n"); */
+	FILE *ptr = fopen(strcat(outputFile, x), "a");
+	bwt(tree, ptr);
+	fclose(ptr);
+	
 	/* printf("Pre-order DFS traversal:\n");
 	dfs(tree); 
 	printf("\n");
-	display_children(tree); // to enumerate children of root from left to right */
+	display_children(tree); // to enumerate children of root from left to right 
+	printf("\n"); */
 }
 
 
@@ -258,7 +262,7 @@ int main (int argc, const char *argv[])
 {
 
 	Node *tree;
-
+	char *outputFile;
 
 	if (argc < 3) {
 		printf("\nERROR: Incorrect number of arguments.\n");
@@ -273,7 +277,8 @@ int main (int argc, const char *argv[])
 	if (setUp(argv) < 0) 
 		return -1;
 
-	printStatistics(tree);
+	strcpy(outputFile, argv[1]);
+	printStatistics(tree, outputFile);
 
 	deallocateMemory(tree);
 	return (0);

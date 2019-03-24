@@ -272,26 +272,15 @@ int display_children(Node *node){
     return 0;
 }
 
-/* Function: bwt()
- * Input:
- * 		*node: pointer to node in tree
- * Output:
- * 		int: returns 0 for success, -1 for failure
- * Summary: Burrows Wheeler Transform. Given an input string, construct a BWT
- * 		and print it out.  Basically, go to leafs and find representative val.
- */
-
-
-int bwt( Node *node ){
+int bwt(Node *node, FILE *ptr){
 	int i;
-	for( i=0; (i < node->numChildren) && (node->children[i] != NULL); i++ ){
-		bwt( node->children[i] );
+	if(node -> numChildren == 0){
+		int value = node -> id - 1;
+		fprintf(ptr,"%c\r\n", (value > 0 ? ibuff[value - 1] : ibuff[inputLen - 1]));
+	} else {
+		for (i = 0; i < node -> numChildren; i++){
+			bwt(node -> children[i], ptr);
+		}
 	}
-	if (node->numChildren == 0)
-	{
-		int bwtval;
-		bwtval = node->id - 1;
-		printf("%c ", (bwtval > 0 ? ibuff[bwtval-1] : ibuff[inputLen - 1]));
-	}
-	return (0);
 }
+

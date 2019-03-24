@@ -35,6 +35,6 @@ int dfs( Node *node );
 
 int display_children( Node *node );
 
-int bwt( Node *node );
+int bwt( Node *node , FILE *ptr );
 
 #endif	
