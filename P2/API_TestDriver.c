@@ -54,113 +54,106 @@ int get_memory_usage_kb(long* vmrss_kb, long* vmsize_kb)
 
 
 int setUp(const char ** argv) {
+    char inputname[64];
+    char alphaname[64];
 
-	char inputname[64];
-	char alphaname[64];
+    struct stat input_st;
+    struct stat alpha_st;
 
-	struct stat input_st;
-	struct stat alpha_st;
+    stat(argv[1], &input_st);
+    stat(argv[2], &alpha_st);
 
-	stat(argv[1], &input_st);
-	stat(argv[2], &alpha_st);
+    int input_size = input_st.st_size;
+    int alpha_size = alpha_st.st_size;
 
-	int input_size = input_st.st_size;
-	int alpha_size = alpha_st.st_size;
+    strcpy(inputname, argv[1]);
+    strcpy(alphaname, argv[2]);
 
-	strcpy(inputname, argv[1]);
-	strcpy(alphaname, argv[2]);
+    FILE *inputfile;
+    FILE *alphafile;
 
-	FILE *inputfile;
-	FILE *alphafile;
+    // Checking if Input file is empty
+    if (!(inputfile = fopen(inputname,"r"))){
+     printf("Error while opening input file.\n");
+     return -1;
+    }
 
-	if ((inputfile = fopen(inputname, "r")) == NULL) {
-		if (errno == ENOENT) {
-			printf("\nERROR: No sequence file found.\n");
-			return -1;
-		}
-		else {
-			printf("\nERROR: Unhandled sequence read error.\n");
-			return -1;
-		}
-	}
+    //Checking if alphabet file is empty
+    if (!(alphafile = fopen(alphaname, "r"))){
+     printf("Error while opening alphabet file.\n");
+     return -1;
+    }
 
-	if ((alphafile = fopen(alphaname, "r")) == NULL) {
-		if (errno == ENOENT) {
-			printf("\nERROR: No sequence file found.\n");
-			return -1;
-		}
-		else {
-			printf("\nERROR: Unhandled sequence read error.\n");
-			return -1;
-		}
-	}
+    // Allocation of memory and failsafe 
+    ibuff = (char*)malloc(input_size);
+    if (!ibuff) {
+        printf("\nERROR: Cannot allocate memory for sequence.\n");
+        return -1;
+    }
 
-	ibuff = (char*)malloc(input_size);
-	if (ibuff == NULL) {
-		printf("\nERROR: Cannot allocate memory for sequence.\n");
-		return -1;
-	}
+    abuff = (char*)malloc(alpha_size);
+    if (!abuff) {
+        printf("\nERROR: Cannot allocate memory for alphabet.\n");
+        return -1;
+    }
 
-	abuff = (char*)malloc(alpha_size);
-	if (abuff == NULL) {
-		printf("\nERROR: Cannot allocate memory for alphabet.\n");
-		return -1;
-	}
+    int i = 0;
 
-	int i = 0;
+    int ibytes = input_size;
+    int abytes = alpha_size;
+    char inchar = '\0';
 
-	int ibytes = input_size;
-	int abytes = alpha_size;
-	char inchar = '\0';
+    // reading the input file
+     do {
+        inchar = fgetc(inputfile);
+        if (inchar == '>') {
+            inchar = fgetc(inputfile);
+            while (inchar != '\n'  && inchar == '|') {
+                if (i < 15) {
+                    iname[i] = inchar;
+                    ++i;
+                }
+                inchar = fgetc(inputfile);
+            }
+            iname[i] = '\0';
+        }
+        if (feof(inputfile)){
+                break;
+        }
+    } while (inchar !='\n');
 
-	// read in name of sequence
-	 do {
-		inchar = fgetc(inputfile);
-		if (inchar == '>') {
-			inchar = fgetc(inputfile);
-			while (inchar != '\n'  && inchar == '|') {
-				if (i < 15) {
-					iname[i] = inchar;
-					++i;
-				}
-				inchar = fgetc(inputfile);
-			}
-			iname[i] = '\0';
-		}
-	} while (inchar != '\n' && inchar != EOF);
+    // Reading the Charecter sequence and input Length
+    do {
+        inchar = fgetc(inputfile);
+        //while (inchar != EOF) {
+        while (!feof(inputfile)){
+                if (inchar != ' ' && inchar != '\n') {
+                ibuff[inputLen] = inchar;
+                ++inputLen;
+            }
+            inchar = fgetc(inputfile);
+        }
+    } while (!feof(inputfile));
+    ibuff[inputLen] = '$';
+    inputLen++;
+    ibuff[inputLen] = '\0';
 
-	// read in the sequence and ++inputLen
-	do {
-		inchar = fgetc(inputfile);
-		while (inchar != EOF) {
-			if (inchar != ' ' && inchar != '\n') {
-				ibuff[inputLen] = inchar;
-				++inputLen;
-				//++i;
-				//ibytes--;
-			}
-			inchar = fgetc(inputfile);
-		}
-	} while (inchar != EOF); /*ibytes > 0 && */
-	ibuff[inputLen] = '$';
-	inputLen++;
-	ibuff[inputLen] = '\0';
+    // read in alphabet
+    do {
+        inchar = fgetc(alphafile);
+        if (inchar != ' ' && inchar != '\n' && !feof(inputfile)) {
+            abuff[alphabetLen] = inchar;
+            ++alphabetLen;
+        }
+    } while (abytes > 0 && !feof(inputfile));
+    abuff[alphabetLen] = '\0';
 
-	// read in alphabet
-	do {
-		inchar = fgetc(alphafile);
-		if (inchar != ' ' && inchar != '\n' && inchar != EOF) {
-			abuff[alphabetLen] = inchar;
-			++alphabetLen;
-		}
-	} while (abytes > 0 && inchar != EOF);
-	abuff[alphabetLen] = '\0';
+    fclose(inputfile);
+    fclose(alphafile);
 
-	fclose(inputfile);
-	fclose(alphafile);
-
-	return (0);
+    return (0);
 }
+
 
 
 double double_time(struct timeval *atime)
@@ -246,7 +239,7 @@ void printStatistics(Node *tree, char *outputFile) {
 	printf("String depth of deepest internal node: %d\n", maxDepth);
 	exactMatchingRepeat();
 
-	FILE *ptr = fopen(strcat(outputFile, x), "a");
+	FILE *ptr = fopen(strcat(outputFile, x), "w");
 	bwt(tree, ptr);
 	fclose(ptr);
 	

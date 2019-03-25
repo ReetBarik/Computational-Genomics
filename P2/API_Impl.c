@@ -20,7 +20,7 @@ Node *makeNode(int id, Node *parent,int suffixHead,int suffixTail,int stringDept
 	newnode->suffixHead = suffixHead;
 	newnode->suffixTail = suffixTail;
 	newnode->numChildren = 0;
-	newnode->children = calloc(1, alphabetLen * sizeof(Node *));
+	newnode->children = (Node **)malloc(alphabetLen * sizeof(Node *));
 	newnode->depth = stringDepth;
 	return (newnode);
 }
