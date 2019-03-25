@@ -86,13 +86,13 @@ int setUp(const char ** argv) {
 
     // Allocation of memory and failsafe 
     ibuff = (char*)malloc(input_size);
-    if (!ibuff) {
+    if (ibuff == NULL) {
         printf("\nERROR: Cannot allocate memory for sequence.\n");
         return -1;
     }
 
     abuff = (char*)malloc(alpha_size);
-    if (!abuff) {
+    if (abuff == NULL) {
         printf("\nERROR: Cannot allocate memory for alphabet.\n");
         return -1;
     }
@@ -104,7 +104,7 @@ int setUp(const char ** argv) {
     char inchar = '\0';
 
     // reading the input file
-     do {
+    do {
         inchar = fgetc(inputfile);
         if (inchar == '>') {
             inchar = fgetc(inputfile);
@@ -117,10 +117,8 @@ int setUp(const char ** argv) {
             }
             iname[i] = '\0';
         }
-        if (feof(inputfile)){
-                break;
-        }
-    } while (inchar !='\n');
+       
+    } while (inchar !='\n' && !feof(inputfile));
 
     // Reading the Charecter sequence and input Length
     do {
@@ -141,11 +139,11 @@ int setUp(const char ** argv) {
     // read in alphabet
     do {
         inchar = fgetc(alphafile);
-        if (inchar != ' ' && inchar != '\n' && !feof(inputfile)) {
+        if (inchar != ' ' && inchar != '\n' && !feof(alphafile)) {
             abuff[alphabetLen] = inchar;
             ++alphabetLen;
         }
-    } while (abytes > 0 && !feof(inputfile));
+    } while (abytes > 0 && !feof(alphafile));
     abuff[alphabetLen] = '\0';
 
     fclose(inputfile);
