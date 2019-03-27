@@ -1,6 +1,5 @@
 #include "API_Impl.c"
 #include "API_Header.h"
-
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
@@ -11,7 +10,7 @@
 #include <string.h>
 
 
-
+// Get ST construction space in KB
 int get_memory_usage_kb(long* vmrss_kb, long* vmsize_kb)
 {
     /* Get the the current process' status file from the proc filesystem */
@@ -53,135 +52,134 @@ int get_memory_usage_kb(long* vmrss_kb, long* vmsize_kb)
 }
 
 
-int setUp(const char ** argv) {
-    char inputname[64];
-    char alphaname[64];
+// Read input file and alphabet file
+int read_files(const char ** argv) {
+    
+    char seqName[64];
+    char alphaName[64];
+    struct stat seq_struct;
+    struct stat alpha_struct;
+    stat(argv[1], &seq_struct);
+    stat(argv[2], &alpha_struct);
+    int seq_size = seq_struct.st_size;
+    int alpha_size = alpha_struct.st_size;
 
-    struct stat input_st;
-    struct stat alpha_st;
+    strcpy(seqName, argv[1]);
+    strcpy(alphaName, argv[2]);
 
-    stat(argv[1], &input_st);
-    stat(argv[2], &alpha_st);
-
-    int input_size = input_st.st_size;
-    int alpha_size = alpha_st.st_size;
-
-    strcpy(inputname, argv[1]);
-    strcpy(alphaname, argv[2]);
-
-    FILE *inputfile;
-    FILE *alphafile;
+    FILE *seqFile;
+    FILE *alphaFile;
 
     // Checking if Input file is empty
-    if (!(inputfile = fopen(inputname,"r"))){
+    if (!(seqFile = fopen(seqName,"r"))){
      printf("Error while opening input file.\n");
      return -1;
     }
 
     //Checking if alphabet file is empty
-    if (!(alphafile = fopen(alphaname, "r"))){
+    if (!(alphaFile = fopen(alphaName, "r"))){
      printf("Error while opening alphabet file.\n");
      return -1;
     }
 
-    // Allocation of memory and failsafe 
-    ibuff = (char*)malloc(input_size);
-    if (ibuff == NULL) {
+    // check if memory is allocated
+    sequence = (char*)malloc(seq_size);
+    if (sequence == NULL) {
         printf("\nERROR: Cannot allocate memory for sequence.\n");
         return -1;
     }
 
-    abuff = (char*)malloc(alpha_size);
-    if (abuff == NULL) {
+    alphabet = (char*)malloc(alpha_size);
+    if (alphabet == NULL) {
         printf("\nERROR: Cannot allocate memory for alphabet.\n");
         return -1;
     }
 
     int i = 0;
 
-    int ibytes = input_size;
-    int abytes = alpha_size;
-    char inchar = '\0';
+    
+    int alpha = alpha_size;
+    char seqChar = '\0';
 
-    // reading the input file
+    // Read the input file
     do {
-        inchar = fgetc(inputfile);
-        if (inchar == '>') {
-            inchar = fgetc(inputfile);
-            while (inchar != '\n'  && inchar == '|') {
+        seqChar = fgetc(seqFile);
+        if (seqChar == '>') {
+            seqChar = fgetc(seqFile);
+            while (seqChar != '\n'  && seqChar == '|') {
                 if (i < 15) {
-                    iname[i] = inchar;
+                    sequenceName[i] = seqChar;
                     ++i;
                 }
-                inchar = fgetc(inputfile);
+                seqChar = fgetc(seqFile);
             }
-            iname[i] = '\0';
+            sequenceName[i] = '\0';
         }
        
-    } while (inchar !='\n' && !feof(inputfile));
+    } while (seqChar !='\n' && !feof(seqFile));
 
-    // Reading the Charecter sequence and input Length
+    // Read input Sequence
     do {
-        inchar = fgetc(inputfile);
-        //while (inchar != EOF) {
-        while (!feof(inputfile)){
-                if (inchar != ' ' && inchar != '\n') {
-                ibuff[inputLen] = inchar;
-                ++inputLen;
+        seqChar = fgetc(seqFile);
+        while (!feof(seqFile)){
+                if (seqChar != ' ' && seqChar != '\n') {
+                sequence[sequenceLength] = seqChar;
+                ++sequenceLength;
             }
-            inchar = fgetc(inputfile);
+            seqChar = fgetc(seqFile);
         }
-    } while (!feof(inputfile));
-    ibuff[inputLen] = '$';
-    inputLen++;
-    ibuff[inputLen] = '\0';
+    } while (!feof(seqFile));
+    sequence[sequenceLength] = '$';
+    sequenceLength++;
+    sequence[sequenceLength] = '\0';
 
-    // read in alphabet
+    // Read  alphabet
     do {
-        inchar = fgetc(alphafile);
-        if (inchar != ' ' && inchar != '\n' && !feof(alphafile)) {
-            abuff[alphabetLen] = inchar;
-            ++alphabetLen;
+        seqChar = fgetc(alphaFile);
+        if (seqChar != ' ' && seqChar != '\n' && !feof(alphaFile)) {
+            alphabet[alphabetLength] = seqChar;
+            ++alphabetLength;
         }
-    } while (abytes > 0 && !feof(alphafile));
-    abuff[alphabetLen] = '\0';
+    } while (alpha > 0 && !feof(alphaFile));
+    alphabet[alphabetLength] = '\0';
 
-    fclose(inputfile);
-    fclose(alphafile);
+    fclose(seqFile);
+    fclose(alphaFile);
 
     return (0);
 }
 
 
-
+// helper function to convert time into double
 double double_time(struct timeval *atime)
 {
 	return ((atime->tv_sec + (atime->tv_usec/1000000.0)) * 1000.0);
 }
 
+
+// helper function to find difference between two timestamps
 double diff_time(struct timeval *tstart, struct timeval *tstop)
 {
 	return (double_time(tstop) - double_time(tstart));
 }
 
-void deallocateMemory(Node *node) {
-	free(ibuff);
-	free(abuff);
-	int i;//,j;
+
+// free up allocated memory
+void deallocate_memory(Node *node) {
+	free(sequence);
+	free(alphabet);
+	int i;
 	if (node){
-		for(i=0; i < node->numChildren; i++){
-			deallocateMemory(node->children[i]);
+		for(i=0; i < node->numberChildren; i++){
+			deallocate_memory(node->children[i]);
 		}
-		//for(j=0;j<alphabetLen;j++)
-		//	free(node->children[j]);
-		//	node->children[j] = NULL;
 		free(node->children);
 		free(node);
 	}
 }
 
 
-/* void exactMatchingRepeat() {
+/* void exact_matching_repeat() {
 	
 	Node *n = maxDepthNode;
 	while(n -> parent -> id != 0){
@@ -190,28 +188,33 @@ void deallocateMemory(Node *node) {
 
 	printf("Exact Matching Repeat: ");
 	for (int i = n -> suffixHead; i <= maxDepthNode -> suffixTail; i++){
-		printf("%c", ibuff[i]);
+		printf("%c", sequence[i]);
 	}
 	printf("\n");
 } */
 
-void exactMatchingRepeat() {
+
+// find exact matching repeat sequence
+void exact_matching_repeat() {
 	int i;
 	Node *n = maxDepthNode -> children[0];
 	printf("Exact Matching Repeat: ");
+    // exact matching repeat is the path label of deepest internal node
 	for (i = n -> id - 1; i < maxDepthNode -> depth + n -> id - 1; i++){
-		printf("%c", ibuff[i]);
+		printf("%c", sequence[i]);
 	}
 	printf("\n");
 	printf("Exact Matching Repeat positions: ");
-	for (i = 0; i < maxDepthNode -> numChildren; i++){
+    // the node ID's of the leaf's under maxDepth node
+	for (i = 0; i < maxDepthNode -> numberChildren; i++){
 		printf("%d, ", maxDepthNode -> children[i] -> id);
 	}
 	printf("\n");
 }
 
 
-void printStatistics(Node *tree, char *outputFile) {
+// print the statistics asked in question
+void print_statistics(Node *tree, char *outputFile) {
 
 	struct timeval tstart, tstop;
 	long vmrss, vmsize, startMem, endMem;
@@ -225,17 +228,17 @@ void printStatistics(Node *tree, char *outputFile) {
     get_memory_usage_kb(&vmrss, &vmsize);
 	endMem = vmrss;
 	printf("\nSUFFIX TREE CONSTRUCTION STATISTICS:\n");
-	printf("\nInput size: %ld (bytes)\n", sizeof(char *) * strlen(ibuff));
+	printf("\nInput size: %ld (bytes)\n", sizeof(char *) * strlen(sequence));
 	printf("Suffix Tree Construction Time: %f (ms)\n", diff_time(&tstart, &tstop));
 	printf("Suffix Tree Construction Space: %6ld (KB)\n", endMem - startMem);
-	printf("Implementation Constant (bytes consumed by code for every input byte): %ld\n", ((endMem - startMem) * 1024) / (sizeof(char *) * strlen(ibuff)));
-	printf("Number of internal nodes: %d\n", inodes + 1);
+	printf("Implementation Constant (bytes consumed by code for every input byte): %ld\n", ((endMem - startMem) * 1024) / (sizeof(char *) * strlen(sequence)));
+	printf("Number of internal nodes: %d\n", internalNodes + 1);
 	printf("Number of leafs: %d\n", leafs - 1);
-	printf("Total number of nodes: %d\n", inodes + leafs);
-	printf("Size of the tree: %ld (bytes)\n", (inodes + leafs) * sizeof(tree));
-	printf("Average string depth of internal nodes: %d\n", (stringDepth / (inodes + 1)));
+	printf("Total number of nodes: %d\n", internalNodes + leafs);
+	printf("Size of the tree: %ld (bytes)\n", (internalNodes + leafs) * sizeof(tree));
+	printf("Average string depth of internal nodes: %d\n", (stringDepth / (internalNodes + 1)));
 	printf("String depth of deepest internal node: %d\n", maxDepth);
-	exactMatchingRepeat();
+	exact_matching_repeat();
 
 	FILE *ptr = fopen(strcat(outputFile, x), "w");
 	bwt(tree, ptr);
@@ -265,12 +268,12 @@ int main (int argc, const char *argv[])
 	printf("Input Alphabet:\t%s\n", argv[2]);
 
 	
-	if (setUp(argv) < 0) 
+	if (read_files(argv) < 0) 
 		return -1;
 
 	strcpy(outputFile, argv[1]);
-	printStatistics(tree, outputFile);
+	print_statistics(tree, outputFile);
 
-	deallocateMemory(tree);
+	deallocate_memory(tree);
 	return (0);
 }
