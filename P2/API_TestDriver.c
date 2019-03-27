@@ -203,6 +203,9 @@ void exact_matching_repeat() {
 	for (i = n -> id - 1; i < maxDepthNode -> depth + n -> id - 1; i++){
 		printf("%c", sequence[i]);
 	}
+
+    printf("\n");
+    printf("Length of longest exact matching repeat: %d",maxDepth);
 	printf("\n");
 	printf("Exact Matching Repeat positions: ");
     // the node ID's of the leaf's under maxDepth node
