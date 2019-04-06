@@ -318,13 +318,7 @@ int align(char *s1, char *s2){
 			}
 			else {
 				// substitution
-				Matrix[i][j].s = substitution(s1, s2, i, j);		
-		 	Matrix[i][j].s = substitution(s1, s2, i, j);			
-				Matrix[i][j].s = substitution(s1, s2, i, j);		
-		 	Matrix[i][j].s = substitution(s1, s2, i, j);			
-				Matrix[i][j].s = substitution(s1, s2, i, j);		
-		 	Matrix[i][j].s = substitution(s1, s2, i, j);			
-				Matrix[i][j].s = substitution(s1, s2, i, j);		
+				Matrix[i][j].s = substitution(s1, s2, i, j);				
 				// deletion
 				Matrix[i][j].d = max(Matrix[i-1][j].s + h + g, Matrix[i-1][j].i + h + g, Matrix[i-1][j].d + g);
 				// insertion
