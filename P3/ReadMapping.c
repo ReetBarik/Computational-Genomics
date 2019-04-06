@@ -1,4 +1,6 @@
 #include "Header.h"
+#include "SuffixTree.c"
+
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
@@ -185,7 +187,28 @@ int readInput(const char ** argv) {
 }
 
 
-int main(const int argc, const char *argv[]){
+void deallocate_tree(Node *node) {
+
+	int i;
+	if (node){
+		for(i=0; i < node->numberChildren; i++){
+			deallocate_tree(node->children[i]);
+		}
+		free(node->children);
+		free(node);
+	}
+}
+
+void deallocate_memory(Node *node) {
+	free(sequence);
+	free(alphabet);
+	free(A);
+	deallocate_tree(node);
+}
+
+int main(int argc, const char *argv[]){
+
+	Node *tree;
 
 	if (argc < 4) {
 		printf("\nERROR: Incorrect number of arguments.\n");
@@ -198,6 +221,16 @@ int main(const int argc, const char *argv[]){
 	printf("Input Alphabet:\t%s\n", argv[3]);
 
 	readInput(argv);
+
+	tree = buildTree();
+
+	if(prepareST(tree) == -1){
+		printf("\nCouldn't prepare ST\n");
+		return -1;
+	}
+
+	printf("%c\n%d\n",sequence[0],A[sequenceLength]);
+	deallocate_memory(tree);
 
     return 0;
 }
