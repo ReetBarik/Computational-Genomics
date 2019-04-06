@@ -12,7 +12,7 @@ typedef struct DP_cell{
 DP_cell **Matrix; // stores the dynamically computed matrix
 int SW = 0; // Smith-Waterman or Needleman-Wunsch
 int ma, mi, h, g; // scoring parameters
-int maxRowIndex, maxColIndex; // stores index of max value to back track from
+int maxRowIndex = 0 , maxColIndex = 0; // stores index of max value to back track from
 char *s1; // stores sequence 1
 char *s2; // stores sequence 2
 char *gene1; // stores name of sequence 1
@@ -51,7 +51,7 @@ int chooseDirection(int i, int j){
 
 // calculate the substitution score
 int substitution(char *s1, char *s2, int i, int j){
-	if (s1[i] != s2[j]) 
+	if (s1[i - 1] != s2[j - 1]) 
 		return chooseDirection(i-1,j-1) + mi;
 	else
 		return chooseDirection(i-1,j-1) + ma;	
@@ -207,13 +207,13 @@ int readinput(char *inputPath){
 					countStr++;
 					break;
 
-				case 'a':
+				//case 'a':
 				case 'A':
-				case 't':
+				//case 't':
 				case 'T':
-				case 'g':
+				//case 'g':
 				case 'G':
-				case 'c':
+				//case 'c':
 				case 'C':				
 					*pos = c;
 					pos++;
@@ -307,12 +307,29 @@ int align(char *s1, char *s2){
 
 	for (i = 1; i <= m; i++){
 		for (j = 1; j <= n; j++){
-			// substitution
+			
+			if (SW) {
+				// substitution
+				Matrix[i][j].s = substitution(s1, s2, i, j) > 0 ? substitution(s1, s2, i, j) : 0;
+				// deletion
+				Matrix[i][j].d = (max(Matrix[i-1][j].s + h + g, Matrix[i-1][j].i + h + g, Matrix[i-1][j].d + g)) > 0 ? (max(Matrix[i-1][j].s + h + g, Matrix[i-1][j].i + h + g, Matrix[i-1][j].d + g)) : 0;
+				// insertion
+				Matrix[i][j].i = (max(Matrix[i][j-1].s + h + g, Matrix[i][j-1].i + g, Matrix[i][j-1].d + h + g)) > 0 ? (max(Matrix[i][j-1].s + h + g, Matrix[i][j-1].i + g, Matrix[i][j-1].d + h + g)) : 0;
+			}
+			else {
+				// substitution
+				Matrix[i][j].s = substitution(s1, s2, i, j);		
 		 	Matrix[i][j].s = substitution(s1, s2, i, j);			
-			// deletion
-			Matrix[i][j].d = max(Matrix[i-1][j].s + h + g, Matrix[i-1][j].i + h + g, Matrix[i-1][j].d + g);
-			// insertion
-			Matrix[i][j].i = max(Matrix[i][j-1].s + h + g, Matrix[i][j-1].i + g, Matrix[i][j-1].d + h + g);
+				Matrix[i][j].s = substitution(s1, s2, i, j);		
+		 	Matrix[i][j].s = substitution(s1, s2, i, j);			
+				Matrix[i][j].s = substitution(s1, s2, i, j);		
+		 	Matrix[i][j].s = substitution(s1, s2, i, j);			
+				Matrix[i][j].s = substitution(s1, s2, i, j);		
+				// deletion
+				Matrix[i][j].d = max(Matrix[i-1][j].s + h + g, Matrix[i-1][j].i + h + g, Matrix[i-1][j].d + g);
+				// insertion
+				Matrix[i][j].i = max(Matrix[i][j-1].s + h + g, Matrix[i][j-1].i + g, Matrix[i][j-1].d + h + g);
+			}
 		}
 	}
 	if (SW){
@@ -320,10 +337,6 @@ int align(char *s1, char *s2){
 		// Contribution of Waterman to this field is the ZERO!!
 		for (i = 1; i <= m; i++){
 			for (j = 1; j <= n; j++){
-
-				Matrix[i][j].s = (Matrix[i][j].s < 0) ? 0 : Matrix[i][j].s;
-				Matrix[i][j].i = (Matrix[i][j].i < 0) ? 0 : Matrix[i][j].i;
-				Matrix[i][j].d = (Matrix[i][j].d < 0) ? 0 : Matrix[i][j].d;
 				
 				// Storing the index where the max score was encountered
 				if (chooseDirection(i,j) > chooseDirection(maxRowIndex, maxColIndex)){
@@ -499,8 +512,6 @@ int main(int argc, const char *argv[])
 
 	// Generating the alignment 
 	retrace(optScore);
-
-	printf("%d", Matrix[11396][10371].d);
 
 	// Deallocating the Matrix
 	for (i = 0; i < (int)strlen(s1) + 1; i++){
