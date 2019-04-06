@@ -18,6 +18,18 @@ typedef struct Node{
 	struct Node **children;
 }Node;
 
+typedef struct DP_cell{
+	int s; int i; int d;
+} DP_cell;
+
+
+DP_cell **Matrix;                       // stores the dynamically computed matrix
+int SW = 0;                             // Smith-Waterman or Needleman-Wunsch
+int ma, mi, h, g, lambda;               // scoring parameters
+int maxRowIndex = 0 , maxColIndex = 0;  // stores index of max value to back track from
+char *s1;                               // stores sequence 1
+char *s2;                               // stores sequence 2
+
 int alphabetLength = 0;					// size of alphabet 
 int sequenceLength = 0;					// length of sequence 
 int internalNodes = 0;					// # internal nodes

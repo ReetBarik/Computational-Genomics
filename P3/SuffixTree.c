@@ -247,11 +247,9 @@ void DFS_PrepareST(Node *T){
 	if(T == NULL) return;
 
 	if (T -> numberChildren == 0){ // is a leaf node
-		A[nextIndex] = T -> id - 1;
-		if(T -> depth >= 1){
-			T -> startLeafIndex = nextIndex;
-			T -> endLeafIndex = nextIndex;
-		}
+		A[nextIndex] = T -> id;
+		T -> startLeafIndex = nextIndex;
+		T -> endLeafIndex = nextIndex;
 		nextIndex++;
 		return;
 	} 
@@ -260,10 +258,9 @@ void DFS_PrepareST(Node *T){
 		for(i = 0; i < T -> numberChildren; i++){
 			DFS_PrepareST(T -> children[i]);
 		}
-		if(T->depth >= 1){
-			T -> startLeafIndex = T -> children[0] -> startLeafIndex;
-			T -> endLeafIndex = T -> children[T -> numberChildren - 1] -> endLeafIndex;
-		}
+		
+		T -> startLeafIndex = T -> children[0] -> startLeafIndex;
+		T -> endLeafIndex = T -> children[T -> numberChildren - 1] -> endLeafIndex;
 	}
 }
 
@@ -272,7 +269,7 @@ int prepareST(Node *node){
 	A = (int*)malloc(sizeof(int)*(sequenceLength));
 
 	if(A == NULL) {
-		printf("Could not allocate memory for A");
+		printf("ERROR: Could not allocate memory for A");
 		return -1;
 	}
 
