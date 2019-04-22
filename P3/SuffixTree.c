@@ -482,3 +482,52 @@ Node *findLocSuffixLink(Node *node, char *read) {
 	}
 	return deepest;
 }
+
+
+// smaller hops inside find_path 
+Node *findLocHop( Node *current,int head, char *read){ 
+	int numChild = 0, i = 0, min;
+	int tail = strlen(read);
+	Node *a = NULL;
+
+	for (i = 0; i < current -> numberChildren; i++) {
+		if (sequence[current -> children[i] -> suffixHead] == read[head]) {
+			a = current -> children[i];
+		}
+	}
+	// if there isnt a child that matches return that node
+	if( a == NULL){
+		//if ( strlen(beta) == 1 )
+		return (current);
+	}
+	//x = (int)strlen(beta);
+	//y = (int)strlen(a->parentEdgeLabel);
+	// find minimum of x and y
+	min = ((tail - head + 1) < (a -> suffixTail - a -> suffixHead + 1)) ? (tail - head + 1) : (a -> suffixTail - a -> suffixHead + 1);
+	for(i = 0; i < min; i++){
+		if( read[head + i] != sequence[a -> suffixHead + i] ){
+			return (current);
+		}
+	}
+	// not an ending leaf and the for loop has gone through the string
+	return (findLocHop( a, head + i, read));
+}
+
+Node *findLocNew(Node *node, char *read) {
+
+	Node *deepest = node;
+	Node *subTreeRoot = NULL;
+	int i = 0;
+	
+	for (i = 0; i < strlen(read) - 1; i++) {
+		Node *subTreeRoot = findLocHop(node, i, read);
+		if (deepest -> depth <= subTreeRoot -> depth)
+			deepest = subTreeRoot;
+	}
+	
+	// printf("%d\n%d\n", subTreeRoot -> startLeafIndex, subTreeRoot -> endLeafIndex);
+    // printf("%d\n", subTreeRoot -> depth);
+    // printf("%c\n%c\n", sequence[subTreeRoot -> suffixHead], sequence[subTreeRoot -> suffixTail]); 
+	return deepest;
+
+}

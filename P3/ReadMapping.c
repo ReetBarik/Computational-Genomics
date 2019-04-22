@@ -36,7 +36,7 @@ int mapReads(Node *node){
         start = 0;
         end = sequenceLength - 2;
         printf("%d\n", subTreeRoot -> depth);
-        if (subTreeRoot -> depth >= lambda){
+        if (subTreeRoot -> depth > lambda){
             max_j = A[subTreeRoot -> startLeafIndex];
             max_j_val = 0;
             for (j = subTreeRoot -> startLeafIndex; j <= subTreeRoot -> endLeafIndex; j++) {
@@ -85,13 +85,11 @@ int mapReadsTest(Node *node){
     Node *subTreeRoot = NULL;
     char *subString;
     int k;
-    FILE *fp = fopen("Output.txt","w");
     for (i = 1; i < totalReads * 2; i += 2) {
-        subTreeRoot = findLocNaive(node, readsList[i]);
+        subTreeRoot = findLocNew(node, readsList[i]);
         printf("%d\n%d\n", subTreeRoot -> startLeafIndex, subTreeRoot -> endLeafIndex);
         printf("%d\n", subTreeRoot -> depth);
         printf("%c\n%c\n", sequence[subTreeRoot -> suffixHead], sequence[subTreeRoot -> suffixTail]); 
     }
-    fclose(fp);
     return 0;
 }
