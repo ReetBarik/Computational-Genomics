@@ -1,5 +1,7 @@
 #include "Header.h"
 #include "SuffixTree.c"
+#include "Alignment.c"
+#include "ReadMapping.c"
 
 #include <errno.h>
 #include <sys/stat.h>
@@ -7,6 +9,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <limits.h>
 
 
 int readInput(const char ** argv) {
@@ -138,7 +142,6 @@ int readInput(const char ** argv) {
 		return (-1);
 	}
 	
-	int readIndex = 0;
 	int currReadLen = 0;
 	int maxReadLen = 0;
 	
@@ -157,6 +160,7 @@ int readInput(const char ** argv) {
 		}
 		else if(inchar != EOF){
 			readsList[readIndex] = &readBuffer[readsLength];
+			++totalReads;
 			++readIndex;
 			while (inchar != '\n' && inchar != EOF) {
 				readBuffer[readsLength] = inchar;
@@ -209,8 +213,16 @@ int readInput(const char ** argv) {
 				token = strtok(NULL, " \t\n");
 				lambda = atoi(token);
 			}
+			else if(strcmp(token, "X") == 0){
+				token = strtok(NULL, " \t\n");
+				X = atoi(token);
+			}
+			else if(strcmp(token, "Y") == 0){
+				token = strtok(NULL, " \t\n");
+				Y = atoi(token);
+			}
 		}
-		printf("Scoring Parameters: Match = %d, Mismatch = %d, h = %d, g = %d, lambda = %d\n\n", ma, mi, h, g, lambda);
+		// printf("Scoring Parameters: Match = %d, Mismatch = %d, h = %d, g = %d, lambda = %d, X = %d, Y = %d\n\n", ma, mi, h, g, lambda, X, Y);
 	}
 
 	fclose(inputfile);
@@ -242,21 +254,20 @@ void deallocate_memory(Node *node) {
 }
 
 int main(int argc, const char *argv[]){
-
-	Node *tree;
+	int i;
 
 	if (argc < 4) {
 		printf("\nERROR: Incorrect number of arguments.\n");
 		return -1;
 	}
 
-    printf("\nThe arguments are:\n\n");
-	printf("Reference File:\t%s\n", argv[1]);
-    printf("Reads File:\t%s\n", argv[2]);
-	printf("Input Alphabet:\t%s\n", argv[3]);
+    // printf("\nThe arguments are:\n\n");
+	// printf("Reference File:\t%s\n", argv[1]);
+    // printf("Reads File:\t%s\n", argv[2]);
+	// printf("Input Alphabet:\t%s\n", argv[3]);
 
 	readInput(argv);
-
+	
 	tree = buildTree();
 
 	if(prepareST(tree) == -1){
@@ -264,7 +275,10 @@ int main(int argc, const char *argv[]){
 		return -1;
 	}
 
-	printf("%d\n%d",tree -> startLeafIndex, tree -> endLeafIndex);
+	// mapReadsTest(tree);
+	mapReads(tree);
+
+	// dfs1 (tree);
 	deallocate_memory(tree);
 
     return 0;

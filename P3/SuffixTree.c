@@ -248,20 +248,22 @@ void DFS_PrepareST(Node *T){
 
 	if (T -> numberChildren == 0){ // is a leaf node
 		A[nextIndex] = T -> id;
-		T -> startLeafIndex = nextIndex;
-		T -> endLeafIndex = nextIndex;
+		// if (T -> depth >= 1) {
+			T -> startLeafIndex = nextIndex;
+			T -> endLeafIndex = nextIndex;
+		// }
 		nextIndex++;
 		return;
 	} 
-	else {
-		int i = 0;
-		for(i = 0; i < T -> numberChildren; i++){
-			DFS_PrepareST(T -> children[i]);
-		}
-		
+	
+	int i = 0;
+	for(i = 0; i < T -> numberChildren; i++){
+		DFS_PrepareST(T -> children[i]);
+	}
+	// if (T -> depth >= 4) {
 		T -> startLeafIndex = T -> children[0] -> startLeafIndex;
 		T -> endLeafIndex = T -> children[T -> numberChildren - 1] -> endLeafIndex;
-	}
+	// }	
 }
 
 int prepareST(Node *node){
@@ -299,6 +301,21 @@ int dfs( Node *node ){
 	return (0);
 }
 
+int dfs1 ( Node *node ) {
+	int i;
+	if (node -> numberChildren == 0){
+		// printf("%d\t%d\n",node-> id, node -> suffixLink -> id);
+		printf("%d\n",node-> id);
+	}
+
+	for ( i = 0; i < node -> numberChildren; ++i)
+	{
+		// visit the children
+		dfs1(node -> children[i]);
+	}
+	return (0);
+}
+
 
 // enumerate children of node from left to right
 int display_children(Node *node){
@@ -323,4 +340,145 @@ int bwt(Node *node, FILE *ptr){
 			bwt(node -> children[i], ptr);
 		}
 	}
+}
+
+
+// reset to Root everytime
+Node *findLocNaive(Node *node, char *read) {
+	int i, readIdx = 0, sequenceIdx = 0, matches = 0;
+	Node *current = node;
+	Node *child = NULL;
+	Node *deepest = tree;
+	bool flag = false;
+
+	while (readIdx < strlen(read)) {
+		flag = false;
+		for (i = 0; i < current -> numberChildren; i++) {
+			if (sequence[current -> children[i] -> suffixHead] == read[readIdx]) {
+				child = current -> children[i];
+			}
+		}
+
+
+		if (child == NULL) {
+			if (current -> depth > deepest -> depth) {
+				deepest = current;
+			}
+			current = tree;
+			readIdx ++;
+		} else {
+			sequenceIdx = child -> suffixHead;
+			matches = 0;
+			while( sequenceIdx <= child -> suffixTail && readIdx < strlen(read)) {
+				if (sequence[sequenceIdx] == read[readIdx]) {
+					sequenceIdx++;
+					readIdx++;
+					matches++;
+				} else {
+					readIdx -= matches;
+					flag = true;
+					break;
+				}
+			}
+			if (sequenceIdx > child -> suffixTail && readIdx >= strlen(read)) {
+				current = child;
+				if (current -> depth > deepest -> depth){
+					deepest = current;
+				}
+			} else {
+				if (readIdx >= strlen(read)) {
+					current = child -> parent;
+					if (current -> depth > deepest -> depth){
+						deepest = current;
+					}
+				} else {
+					if (flag) {
+						if (current -> depth > deepest -> depth){
+							deepest = current;
+						}
+						current = tree;
+					}
+					else {
+						current = child;
+						if (current -> depth > deepest -> depth){
+							deepest = current;
+						}
+					}
+				}				
+			}
+		}
+	}
+	return deepest;
+}
+
+
+// take suffix link instead of resetting to Root
+Node *findLocSuffixLink(Node *node, char *read) {
+	int i, readIdx = 0, sequenceIdx = 0, matches = 0;
+	Node *current = node;
+	Node *child = NULL;
+	Node *deepest = tree;
+	bool flag = false;
+
+	while (readIdx < strlen(read)) {
+		flag = false;
+		for (i = 0; i < current -> numberChildren; i++) {
+			if (sequence[current -> children[i] -> suffixHead] == read[readIdx]) {
+				child = current -> children[i];
+			}
+		}
+
+		if (child == NULL) {
+			if (current -> depth > deepest -> depth) {
+				deepest = current;
+				// if (current -> suffixLink == NULL)
+				// 	current = current -> parent -> suffixLink;
+				// else
+					current = current -> suffixLink;
+			}
+		} else {
+			sequenceIdx = child -> suffixHead;
+			matches = 0;
+			while( sequenceIdx <= child -> suffixTail && readIdx < strlen(read)) {
+				if (sequence[sequenceIdx] == read[readIdx]) {
+					sequenceIdx++;
+					readIdx++;
+					matches++;
+				} else {
+					readIdx -= matches;
+					flag = true;
+					break;
+				}
+			}
+			if (sequenceIdx > child -> suffixTail && readIdx >= strlen(read)) {
+				current = child;
+				if (current -> depth > deepest -> depth){
+					deepest = current;
+				}
+				return deepest;
+			} else {
+				if (readIdx >= strlen(read)) {
+					current = child -> parent;
+					if (current -> depth > deepest -> depth){
+						deepest = current;
+					}
+					return deepest;
+				} else {
+					if (flag) {
+						if (current -> depth > deepest -> depth){
+							deepest = current;
+						}
+						current = child -> parent -> suffixLink;
+					}
+					else {
+						current = child;
+						if (current -> depth > deepest -> depth){
+							deepest = current;
+						}
+					}
+				}				
+			}
+		}
+	}
+	return deepest;
 }

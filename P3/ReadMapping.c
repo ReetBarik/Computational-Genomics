@@ -1,0 +1,97 @@
+#include "Header.h"
+
+char *extractSubString(int j, int len){
+    int start = 0, end = sequenceLength, i = 0;
+    char *sub_string = NULL;
+
+    if(j - len > 0)
+        start = j - len;        
+
+    if(j + len < sequenceLength)
+        end = j + len;        
+
+    sub_string = (char *)calloc((end - start + 1) , sizeof(char));
+
+    if (sub_string == NULL){
+        printf("\nERROR: Couldn't allocate substring!\n");
+        exit(1);
+    }
+    
+    for (i = start; i <= end; i++) {
+        sub_string [i - start] = sequence[i];
+    }
+    return sub_string;
+}
+
+
+int mapReads(Node *node){
+    int i, j, start, end;
+    int max_j, max_j_val = 0;
+    int val;
+    Node *subTreeRoot = NULL;
+    char *subString;
+    int k;
+    for (i = 1; i < 100 * 2; i += 2) {
+        subTreeRoot = findLocNaive(node, readsList[i]);
+        start = 0;
+        end = sequenceLength - 2;
+        printf("%d\n", subTreeRoot -> depth);
+        if (subTreeRoot -> depth >= lambda){
+            max_j = A[subTreeRoot -> startLeafIndex];
+            max_j_val = 0;
+            for (j = subTreeRoot -> startLeafIndex; j <= subTreeRoot -> endLeafIndex; j++) {
+                subString = extractSubString(A[j], strlen(readsList[i]));
+                s1 = subString;
+                s2 = readsList[i];
+
+                val = align(s1, s2);
+
+                if (val != -1){
+                    if (val >= X){
+                        if (val > max_j_val){
+                            max_j_val = val;
+                            max_j = A[i];
+                        }
+                    } 
+                }
+                for (k = 0; k < (int)strlen(s1) + 1; k++){
+                    free(Matrix[k]);
+                }
+                free(Matrix);
+            }
+
+            if (max_j_val == 0) {
+                printf("%s %s\n",readsList[i - 1], "No hits found");
+            } else {
+                if (max_j - strlen(readsList[i]) > 0)
+                    start = max_j - strlen(readsList[i]);
+
+                if (max_j + strlen(readsList[i]) < sequenceLength)
+                    end = max_j + strlen(readsList[i]);
+                printf("%s %d %d\n", readsList[i - 1], start, end);
+            }
+        } else {
+            printf("%s %s\n",readsList[i - 1], "No hits found");
+        }        
+    }
+    return 0;
+}
+
+
+int mapReadsTest(Node *node){
+    int i, j, start, end;
+    int max_j, max_j_val = 0;
+    int val;
+    Node *subTreeRoot = NULL;
+    char *subString;
+    int k;
+    FILE *fp = fopen("Output.txt","w");
+    for (i = 1; i < totalReads * 2; i += 2) {
+        subTreeRoot = findLocNaive(node, readsList[i]);
+        printf("%d\n%d\n", subTreeRoot -> startLeafIndex, subTreeRoot -> endLeafIndex);
+        printf("%d\n", subTreeRoot -> depth);
+        printf("%c\n%c\n", sequence[subTreeRoot -> suffixHead], sequence[subTreeRoot -> suffixTail]); 
+    }
+    fclose(fp);
+    return 0;
+}
