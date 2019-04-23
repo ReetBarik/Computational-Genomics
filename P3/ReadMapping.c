@@ -35,7 +35,7 @@ int mapReads(Node *node){
     int count = 0;
 
     // going through all reads
-    for (i = 1; i < 10000 * 2; i += 2) {
+    for (i = 1; i < totalReads * 2; i += 2) {
         subTreeRoot = findLoc(node, readsList[i]);
         start = 0;
         end = sequenceLength - 2;

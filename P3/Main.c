@@ -324,8 +324,8 @@ int main(int argc, const char *argv[]){
 	printf("Execution time - MapReads: %f (ms)\n", diff_time(&tstart, &tstop));
 
 	// Other Statistics
-	printf("Alignments performed per read: %f\n", (((float)countAlign)/((float)10000)));
-	printf("Hit Rate: %f\n",(((float)countHits)/((float)10000))*100);
+	printf("Alignments performed per read: %f\n", (((float)countAlign)/((float)totalReads)));
+	printf("Hit Rate: %f\n",(((float)countHits)/((float)totalReads))*100);
 
 	deallocate_memory(tree);
 
