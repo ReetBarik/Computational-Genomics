@@ -12,6 +12,8 @@
 #include <stdbool.h>
 #include <limits.h>
 
+#include <time.h>
+
 
 int readInput(const char ** argv) {
 
@@ -233,6 +235,20 @@ int readInput(const char ** argv) {
 	return (0);
 }
 
+// helper function to convert time into double
+double double_time(struct timeval *atime)
+{
+	return ((atime->tv_sec + (atime->tv_usec/1000000.0)) * 1000.0);
+}
+
+
+// helper function to find difference between two timestamps
+double diff_time(struct timeval *tstart, struct timeval *tstop)
+{
+	return (double_time(tstop) - double_time(tstart));
+}
+
+
 
 void deallocate_tree(Node *node) {
 
@@ -254,29 +270,53 @@ void deallocate_memory(Node *node) {
 }
 
 int main(int argc, const char *argv[]){
-	int i;
+	int i, x;
+	struct timeval tstart, tstop;
 
 	if (argc < 4) {
 		printf("\nERROR: Incorrect number of arguments.\n");
 		return -1;
 	}
 
+	
     // printf("\nThe arguments are:\n\n");
 	// printf("Reference File:\t%s\n", argv[1]);
     // printf("Reads File:\t%s\n", argv[2]);
 	// printf("Input Alphabet:\t%s\n", argv[3]);
 
 	readInput(argv);
-	
-	tree = buildTree();
 
-	if(prepareST(tree) == -1){
-		printf("\nERROR: Couldn't prepare ST\n");
+	// Input Statistics
+	printf("Length of Reference genome: %d\n", sequenceLength);
+	printf("Number of reads in the input: %d\n", totalReads);
+
+	
+	// Construct ST
+	gettimeofday(&tstart, NULL);
+	tree = buildTree();
+	gettimeofday(&tstop, NULL);
+	printf("Execution time - ConstructST: %f(ms)\n", diff_time(&tstart, &tstop));
+	
+	// Prepare ST
+	gettimeofday(&tstart, NULL);
+	x = prepareST(tree);
+	gettimeofday(&tstop, NULL);
+	printf("Execution time - PrepareST: %f(ms)\n",diff_time(&tstart, &tstop));
+	if(x == -1){
+		printf("\nERROR: Couldn't prepare ST(ms)\n");
 		return -1;
 	}
 
 	// mapReadsTest(tree);
+	gettimeofday(&tstart, NULL);
 	mapReads(tree);
+	gettimeofday(&tstop, NULL);
+	printf("Execution time - MapReads: %f (ms)\n", diff_time(&tstart, &tstop));
+
+	// printf("%d\n", countAlign);
+	printf("Alignments performed per read: %f\n", (((float)countAlign)/((float)totalReads)));
+
+	printf("Hit Rate: %f\n",(((float)countHits)/((float)totalReads))*100);
 
 	// dfs1 (tree);
 	deallocate_memory(tree);

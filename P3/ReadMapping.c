@@ -45,6 +45,7 @@ int mapReads(Node *node){
                 s2 = readsList[i];
 
                 val = align(s1, s2);
+                countAlign++;
 
                 if (val != -1){
                     if (val >= X){
@@ -61,7 +62,6 @@ int mapReads(Node *node){
             }
 
             if (max_j_val == 0) {
-                count ++;
                 printf("%s %s\n",readsList[i - 1], "No hits found");
             } else {
                 if (max_j - strlen(readsList[i]) > 0)
@@ -70,13 +70,14 @@ int mapReads(Node *node){
                 if (max_j + strlen(readsList[i]) < sequenceLength)
                     end = max_j + strlen(readsList[i]);
                 printf("%s %d %d\n", readsList[i - 1], start, end);
+                countHits++;
+
             }
         } else {
-            count ++;
             printf("%s %s\n",readsList[i - 1], "No hits found");
         }        
     }
-    printf("%d\n",count); // Number of "No hits found"
+    // printf("%d\n",count); // Number of "No hits found"
     return 0;
 }
 

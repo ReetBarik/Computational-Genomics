@@ -48,6 +48,8 @@ char **readsList;
 int readsLength = 0;
 int totalReads = 0;
 int readIndex = 0;
+int countAlign = 0;
+int countHits = 0;
 
 Node *tree;
 int *A = NULL;
