@@ -31,12 +31,12 @@ int mapReads(Node *node){
     Node *subTreeRoot = NULL;
     char *subString;
     int k;
-    for (i = 1; i < 100 * 2; i += 2) {
-        subTreeRoot = findLocNaive(node, readsList[i]);
+    int count = 0;
+    for (i = 1; i < totalReads * 2; i += 2) {
+        subTreeRoot = findLoc(node, readsList[i]);
         start = 0;
         end = sequenceLength - 2;
-        printf("%d\n", subTreeRoot -> depth);
-        if (subTreeRoot -> depth > lambda){
+        if (subTreeRoot != NULL){
             max_j = A[subTreeRoot -> startLeafIndex];
             max_j_val = 0;
             for (j = subTreeRoot -> startLeafIndex; j <= subTreeRoot -> endLeafIndex; j++) {
@@ -61,6 +61,7 @@ int mapReads(Node *node){
             }
 
             if (max_j_val == 0) {
+                count ++;
                 printf("%s %s\n",readsList[i - 1], "No hits found");
             } else {
                 if (max_j - strlen(readsList[i]) > 0)
@@ -71,14 +72,16 @@ int mapReads(Node *node){
                 printf("%s %d %d\n", readsList[i - 1], start, end);
             }
         } else {
+            count ++;
             printf("%s %s\n",readsList[i - 1], "No hits found");
         }        
     }
+    printf("%d\n",count); // Number of "No hits found"
     return 0;
 }
 
 
-int mapReadsTest(Node *node){
+int mapReadsTest(Node *node){  // used to debug findLoc implementation
     int i, j, start, end;
     int max_j, max_j_val = 0;
     int val;
@@ -86,7 +89,7 @@ int mapReadsTest(Node *node){
     char *subString;
     int k;
     for (i = 1; i < totalReads * 2; i += 2) {
-        subTreeRoot = findLocNew(node, readsList[i]);
+        subTreeRoot = findLoc(node, readsList[i]);
         printf("%d\n%d\n", subTreeRoot -> startLeafIndex, subTreeRoot -> endLeafIndex);
         printf("%d\n", subTreeRoot -> depth);
         printf("%c\n%c\n", sequence[subTreeRoot -> suffixHead], sequence[subTreeRoot -> suffixTail]); 

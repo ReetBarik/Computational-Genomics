@@ -301,6 +301,8 @@ int dfs( Node *node ){
 	return (0);
 }
 
+
+// function to debug prepareST
 int dfs1 ( Node *node ) {
 	int i;
 	if (node -> numberChildren == 0){
@@ -343,16 +345,18 @@ int bwt(Node *node, FILE *ptr){
 }
 
 
-// reset to Root everytime
+// reset to Root everytime [DOESN'T WORK AS WELL. Kept only for the purpose of understanding]
 Node *findLocNaive(Node *node, char *read) {
 	int i, readIdx = 0, sequenceIdx = 0, matches = 0;
 	Node *current = node;
 	Node *child = NULL;
 	Node *deepest = tree;
 	bool flag = false;
+	int totalMatches = 0;
 
 	while (readIdx < strlen(read)) {
 		flag = false;
+		totalMatches = 0;
 		for (i = 0; i < current -> numberChildren; i++) {
 			if (sequence[current -> children[i] -> suffixHead] == read[readIdx]) {
 				child = current -> children[i];
@@ -374,8 +378,10 @@ Node *findLocNaive(Node *node, char *read) {
 					sequenceIdx++;
 					readIdx++;
 					matches++;
+					totalMatches++;
 				} else {
 					readIdx -= matches;
+					// totalMatches += (child -> parent -> depth + matches);
 					flag = true;
 					break;
 				}
@@ -408,11 +414,15 @@ Node *findLocNaive(Node *node, char *read) {
 			}
 		}
 	}
-	return deepest;
+	printf("%d\n", totalMatches);
+	if (totalMatches >= lambda)
+		return deepest;
+	else
+		return NULL;
 }
 
 
-// take suffix link instead of resetting to Root
+// take suffix link instead of resetting to Root [DOESN'T WORK AS WELL. Kept only for the purpose of understanding]
 Node *findLocSuffixLink(Node *node, char *read) {
 	int i, readIdx = 0, sequenceIdx = 0, matches = 0;
 	Node *current = node;
@@ -483,9 +493,11 @@ Node *findLocSuffixLink(Node *node, char *read) {
 	return deepest;
 }
 
+// EVRYTHING BELOW THIS POINT WORKS AND REUSES CODE FOR findPath FROM P2 TO IMPLEMENT findLoc
+// SURPRISINGLY, THIS WORKS. 
 
 // smaller hops inside find_path 
-Node *findLocHop( Node *current,int head, char *read){ 
+Node *findLocHop( Node *current,int head, char *read, int *c){ 
 	int numChild = 0, i = 0, min;
 	int tail = strlen(read);
 	Node *a = NULL;
@@ -507,20 +519,23 @@ Node *findLocHop( Node *current,int head, char *read){
 	for(i = 0; i < min; i++){
 		if( read[head + i] != sequence[a -> suffixHead + i] ){
 			return (current);
+		} else {
+			*c += 1;
 		}
 	}
 	// not an ending leaf and the for loop has gone through the string
-	return (findLocHop( a, head + i, read));
+	return (findLocHop( a, head + i, read, c));
 }
 
-Node *findLocNew(Node *node, char *read) {
+Node *findLoc(Node *node, char *read) {
 
 	Node *deepest = node;
 	Node *subTreeRoot = NULL;
 	int i = 0;
+	int count = 0;
 	
 	for (i = 0; i < strlen(read) - 1; i++) {
-		Node *subTreeRoot = findLocHop(node, i, read);
+		Node *subTreeRoot = findLocHop(node, i, read, &count);
 		if (deepest -> depth <= subTreeRoot -> depth)
 			deepest = subTreeRoot;
 	}
@@ -528,6 +543,9 @@ Node *findLocNew(Node *node, char *read) {
 	// printf("%d\n%d\n", subTreeRoot -> startLeafIndex, subTreeRoot -> endLeafIndex);
     // printf("%d\n", subTreeRoot -> depth);
     // printf("%c\n%c\n", sequence[subTreeRoot -> suffixHead], sequence[subTreeRoot -> suffixTail]); 
-	return deepest;
+	if (count >= lambda)
+		return deepest;
+	else
+		return NULL;
 
 }
