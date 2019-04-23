@@ -24,7 +24,7 @@ typedef struct DP_cell{
 	int s; int i; int d;
 } DP_cell;
 
-
+// Global varaiables declaration
 DP_cell **Matrix;                       // stores the dynamically computed matrix
 int SW = 1;                             // Smith-Waterman or Needleman-Wunsch
 int ma, mi, h, g, lambda, X, Y;         // scoring parameters
@@ -43,19 +43,23 @@ char *alphabet;							// alphabet
 char *sequence;							// input sequence
 char sequenceName[16];
 
-char *readBuffer;
-char **readsList;	
-int readsLength = 0;
-int totalReads = 0;
-int readIndex = 0;
-int countAlign = 0;
-int countHits = 0;
+char *readBuffer;						// helper variable for reading reads from input file
+int readsLength = 0;					// same
+int readIndex = 0;						// helper variable for mapReads()
+int nextIndex = 0;						// helper variable for PrepareST()
+char **readsList;						// readsList[i] = name(read[i]) and readList[i+1] = read[i]
 
-Node *tree;
-int *A = NULL;
-int nextIndex = 0;
 
-Node *buildTree();
-void DFS_PrepareST(Node *T);
+int totalReads = 0;						// total number of reads in input file
+int countAlign = 0;						// Statistics variable
+int countHits = 0;						// same
+
+Node *tree;								// global suffix tree for reference genome rooted at tree
+int *A = NULL;							// global A[] for PrepareST()
+
+// Global funtion prototypes
+Node *buildTree();						// SuffixTree Construction 
+int prepareST(Node *T);					// PrepareST()
+int mapReads(Node *node);				// mapReads()
 
 #endif

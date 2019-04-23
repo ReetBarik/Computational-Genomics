@@ -221,10 +221,10 @@ int retrace(){
 	stringReverse(str0);
 	stringReverse(str2);
 
-	// print them with 60 chars in each line
+	// total alignment length
 	total = numMa + numMi + numGa;
 
-    if (((total * 100) / strlen(s2)) < Y)
+    if (((total * 100) / strlen(s2)) < Y)			// LengthCoverage ≥ Y%
         return -1;
 	return numMa * 100 / total;
 }
@@ -280,9 +280,9 @@ int align(char *seq1, char *seq2){
 				}
 			}
 		}
-		// Local alignment optimal score
+		// Local alignment retrace
 		return retrace();
 	}
-	// Global alignment optimal score
+	// Global alignment retrace
 	return retrace();
 }

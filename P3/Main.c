@@ -16,67 +16,65 @@
 
 
 int readInput(const char ** argv) {
+	int linenumber = 0;
+	int readnum = 0;
+	int currentRead  = 0;
 
 	char paramLine[20];
-    // get total number of lines in read
-	int numlines = 0;
-	int longRead = 0;
-	int curRead  = 0;
+	char inputName[64];
+	char readsName[64];
+	char alphaName[64];
 
-	char inputname[64];
-	char readsname[64];
-	char alphaname[64];
+	struct stat inputStruct;
+	struct stat readsStruct;
+	struct stat alphaStruct;
 
-	struct stat input_st;
-	struct stat reads_st;
-	struct stat alpha_st;
+	unsigned int inputSize = inputStruct.st_size;
+	unsigned int readsSize = readsStruct.st_size;
+	unsigned int alphaSize = alphaStruct.st_size;
 
-	stat(argv[1], &input_st);
-	stat(argv[2], &reads_st);
-	stat(argv[3], &alpha_st);
+	stat(argv[1], &inputStruct);
+	stat(argv[2], &readsStruct);
+	stat(argv[3], &alphaStruct);
 
-	unsigned int input_size = input_st.st_size;
-	unsigned int reads_size = reads_st.st_size;
-	unsigned int alpha_size = alpha_st.st_size;
+	strcpy(inputName, argv[1]);
+	strcpy(readsName, argv[2]);
+	strcpy(alphaName, argv[3]);
 
-	strcpy(inputname, argv[1]);
-	strcpy(readsname, argv[2]);
-	strcpy(alphaname, argv[3]);
+	FILE *inputFile;
+	FILE *readsFile;
+	FILE *alphaFile;
+	FILE *configFile;
 
-	FILE *inputfile;
-	FILE *readsfile;
-	FILE *alphafile;
-	FILE *configfile;
-
-	if ((inputfile = fopen(inputname, "r")) == NULL) {
+	if ((inputFile = fopen(inputName, "r")) == NULL) {
 		printf("\nERROR: No sequence file found.\n");
 		return -1;
 	}
 
-	if ((readsfile = fopen(readsname, "r")) == NULL) {
+	if ((readsFile = fopen(readsName, "r")) == NULL) {
 		printf("\nERROR: No reads sequence file found.\n");
 		return -1;
 	}
 
-	if ((alphafile = fopen(alphaname, "r")) == NULL) {
+	if ((alphaFile = fopen(alphaName, "r")) == NULL) {
 		printf("\nERROR: No alphabet file found.\n");
 		return -1;
 	}
 
-	if ((configfile = fopen("parameters.config", "r")) == NULL) {
+	if ((configFile = fopen("parameters.config", "r")) == NULL) {
 		printf("\nERROR: No config file found.\n");
 		return -1;
 	}
 
-	sequence = (char*)malloc(input_size);
+	sequence = (char*)malloc(inputSize);
 	if (sequence == NULL) {
 		printf("\nERROR: Cannot allocate memory for sequence.\n");
 		return -1;
 	}
 
-	// readBuffer allocation is in the read section	
-
-	alphabet = (char*)malloc(alpha_size);
+	
+	// buffer to allocate for reads
+	alphabet = (char*)malloc(alphaSize);
 	if (alphabet == NULL) {
 		printf("\nERROR: Cannot allocate memory for alphabet.\n");
 		return -1;
@@ -85,60 +83,61 @@ int readInput(const char ** argv) {
 	int i = 0;
 	char inchar = '\0';
 
-	// read in name of sequence
+	// read the input file sequentially
 	 do {
-		inchar = fgetc(inputfile);
+		inchar = fgetc(inputFile);
 		if (inchar == '>') {
-			inchar = fgetc(inputfile);
+			inchar = fgetc(inputFile);
 			while (inchar != '\n'  && inchar == '|') {
 				if (i < 15) {
 					sequenceName[i] = inchar;
 					++i;
 				}
-				inchar = fgetc(inputfile);
+				inchar = fgetc(inputFile);
 			}
 			sequenceName[i] = '\0';
 		}
 	} while (inchar != '\n' && inchar != EOF);
 
-	// read in the sequence and ++sequenceLength
+	// read the sequence from the input file 
 	do {
-		inchar = fgetc(inputfile);
+		inchar = fgetc(inputFile);
 		while (inchar != EOF) {
 			if (inchar != ' ' && inchar != '\n') {
 				sequence[sequenceLength] = inchar;
 				++sequenceLength;
 			}
-			inchar = fgetc(inputfile);
+			inchar = fgetc(inputFile);
 		}
 	} while (inchar != EOF);
 	sequence[sequenceLength] = '$';
 	sequenceLength++;
 	sequence[sequenceLength] = '\0';
 
+	// get maximum length
 	do {
-		inchar = fgetc(readsfile);
-		++curRead;
+		inchar = fgetc(readsFile);
+		++currentRead;
 		if (inchar == '\n') {
-			++numlines;
-			if (curRead > longRead) {	// also get max line length
-				longRead = curRead;
-				curRead = 0;
+			++linenumber;
+			if (currentRead > readnum) {	
+				readnum = currentRead;
+				currentRead = 0;
 			}
 		}
 	} while (inchar != EOF);
 
-	fseek(readsfile, 0, SEEK_SET);	// reset to beginning
+	fseek(readsFile, 0, SEEK_SET);
 
-	// allocate reads indexing array
-	readBuffer = (char*)malloc(reads_size);
+	//	allocate buffer for reads
+	readBuffer = (char*)malloc(readsSize);
 	if (readBuffer == NULL) {
 		printf("\nERROR: Cannot allocate memory for reads sequence.\n");
 		return (-1);
 	}
 	
-	// read in reads
-	readsList = (char**)malloc(numlines * sizeof(char*));
+	// read the set of reads from read file
+	readsList = (char**)malloc(linenumber * sizeof(char*));
 	if (readsList == NULL) {
 		printf("\nERROR: Cannot allocate memory for readsList.\n");
 		return (-1);
@@ -147,17 +146,17 @@ int readInput(const char ** argv) {
 	int currReadLen = 0;
 	int maxReadLen = 0;
 	
-	// read in reads, names, and make a readsList
+	// prepare readList
 	do {
-		inchar = fgetc(readsfile);
+		inchar = fgetc(readsFile);
 		if (inchar == '>') {		// read in a name
-			inchar = fgetc(readsfile);
+			inchar = fgetc(readsFile);
 			readsList[readIndex] = &readBuffer[readsLength];
 			++readIndex;
 			while(inchar != '\n' && inchar != EOF) {
 				readBuffer[readsLength] = inchar;
 				++readsLength;
-				inchar = fgetc(readsfile);
+				inchar = fgetc(readsFile);
 			}
 		}
 		else if(inchar != EOF){
@@ -168,7 +167,7 @@ int readInput(const char ** argv) {
 				readBuffer[readsLength] = inchar;
 				++readsLength;
 				++currReadLen;
-				inchar = fgetc(readsfile);
+				inchar = fgetc(readsFile);
 			}
 		}
 		if (currReadLen > maxReadLen) {
@@ -182,9 +181,9 @@ int readInput(const char ** argv) {
 	} while (inchar != EOF);
 	readBuffer[readsLength] = '\0';
 
-	// read in alphabet
+	// read the set of alphabets 
 	do {
-		inchar = fgetc(alphafile);
+		inchar = fgetc(alphaFile);
 		if (inchar != ' ' && inchar != '\n' && inchar != EOF) {
 			alphabet[alphabetLength] = inchar;
 			++alphabetLength;
@@ -192,8 +191,8 @@ int readInput(const char ** argv) {
 	} while (inchar != EOF);
 	alphabet[alphabetLength] = '\0';
 
-	if (configfile) {
-		while(fgets(paramLine, 20, configfile)){ // maximum 10 characters required
+	if (configFile) {
+		while(fgets(paramLine, 20, configFile)){ // maximum 10 characters required
 			char *token = strtok(paramLine, " \t\n");
 			if(strcmp(token, "match") == 0){
 				token = strtok(NULL, "\t\n");
@@ -227,10 +226,10 @@ int readInput(const char ** argv) {
 		// printf("Scoring Parameters: Match = %d, Mismatch = %d, h = %d, g = %d, lambda = %d, X = %d, Y = %d\n\n", ma, mi, h, g, lambda, X, Y);
 	}
 
-	fclose(inputfile);
-	fclose(readsfile);
-	fclose(alphafile);
-	fclose(configfile);
+	fclose(inputFile);
+	fclose(readsFile);
+	fclose(alphaFile);
+	fclose(configFile);
 
 	return (0);
 }
@@ -249,9 +248,8 @@ double diff_time(struct timeval *tstart, struct timeval *tstop)
 }
 
 
-
+// free memory for tree
 void deallocate_tree(Node *node) {
-
 	int i;
 	if (node){
 		for(i=0; i < node->numberChildren; i++){
@@ -306,8 +304,8 @@ int main(int argc, const char *argv[]){
 		return -1;
 	}
 
+	// mapReads
 	printf("OUTPUT:\n\n");
-	// mapReadsTest(tree);
 	gettimeofday(&tstart, NULL);
 	mapReads(tree);
 	gettimeofday(&tstop, NULL);
@@ -319,16 +317,16 @@ int main(int argc, const char *argv[]){
 	// Input Statistics
 	printf("Length of Reference genome: %d\n", sequenceLength);
 	printf("Number of reads in the input: %d\n", totalReads);
+	
+	// Timing Statistics
 	printf("Execution time - ConstructST: %f(ms)\n",construct_ST_time);
 	printf("Execution time - PrepareST: %f(ms)\n",prepare_ST_time);
 	printf("Execution time - MapReads: %f (ms)\n", diff_time(&tstart, &tstop));
 
-	// printf("%d\n", countAlign);
-	printf("Alignments performed per read: %f\n", (((float)countAlign)/((float)totalReads)));
+	// Other Statistics
+	printf("Alignments performed per read: %f\n", (((float)countAlign)/((float)10000)));
+	printf("Hit Rate: %f\n",(((float)countHits)/((float)10000))*100);
 
-	printf("Hit Rate: %f\n",(((float)countHits)/((float)totalReads))*100);
-
-	// dfs1 (tree);
 	deallocate_memory(tree);
 
     return 0;

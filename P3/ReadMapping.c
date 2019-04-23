@@ -1,13 +1,14 @@
 #include "Header.h"
 
+// extract sub string sequence[j - l ....... j + l]
 char *extractSubString(int j, int len){
     int start = 0, end = sequenceLength, i = 0;
     char *sub_string = NULL;
 
-    if(j - len > 0)
+    if(j - len > 0)                             // starting boundary condition
         start = j - len;        
 
-    if(j + len < sequenceLength)
+    if(j + len < sequenceLength)                // ending boundary condition
         end = j + len;        
 
     sub_string = (char *)calloc((end - start + 1) , sizeof(char));
@@ -18,7 +19,7 @@ char *extractSubString(int j, int len){
     }
     
     for (i = start; i <= end; i++) {
-        sub_string [i - start] = sequence[i];
+        sub_string [i - start] = sequence[i];   // copy from reference genome
     }
     return sub_string;
 }
@@ -32,21 +33,27 @@ int mapReads(Node *node){
     char *subString;
     int k;
     int count = 0;
-    for (i = 1; i < totalReads * 2; i += 2) {
+
+    // going through all reads
+    for (i = 1; i < 10000 * 2; i += 2) {
         subTreeRoot = findLoc(node, readsList[i]);
         start = 0;
         end = sequenceLength - 2;
-        if (subTreeRoot != NULL){
+        if (subTreeRoot != NULL){               // lambda condition not satisfied
             max_j = A[subTreeRoot -> startLeafIndex];
             max_j_val = 0;
+
+            // enumerating all the locations corresponding to the leaves
             for (j = subTreeRoot -> startLeafIndex; j <= subTreeRoot -> endLeafIndex; j++) {
                 subString = extractSubString(A[j], strlen(readsList[i]));
                 s1 = subString;
                 s2 = readsList[i];
 
+                // percent identity
                 val = align(s1, s2);
                 countAlign++;
 
+                // check if % identity is more than X%
                 if (val != -1){
                     if (val >= X){
                         if (val > max_j_val){
@@ -77,7 +84,6 @@ int mapReads(Node *node){
             printf("%s %s\n",readsList[i - 1], "No hits found");
         }        
     }
-    // printf("%d\n",count); // Number of "No hits found"
     return 0;
 }
 
