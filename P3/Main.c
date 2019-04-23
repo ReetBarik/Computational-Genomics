@@ -271,6 +271,7 @@ void deallocate_memory(Node *node) {
 
 int main(int argc, const char *argv[]){
 	int i, x;
+	float construct_ST_time, prepare_ST_time;
 	struct timeval tstart, tstop;
 
 	if (argc < 4) {
@@ -286,31 +287,40 @@ int main(int argc, const char *argv[]){
 
 	readInput(argv);
 
-	// Input Statistics
-	printf("Length of Reference genome: %d\n", sequenceLength);
-	printf("Number of reads in the input: %d\n", totalReads);
-
 	
 	// Construct ST
 	gettimeofday(&tstart, NULL);
 	tree = buildTree();
 	gettimeofday(&tstop, NULL);
-	printf("Execution time - ConstructST: %f(ms)\n", diff_time(&tstart, &tstop));
+	construct_ST_time =  diff_time(&tstart, &tstop);
 	
 	// Prepare ST
 	gettimeofday(&tstart, NULL);
 	x = prepareST(tree);
 	gettimeofday(&tstop, NULL);
-	printf("Execution time - PrepareST: %f(ms)\n",diff_time(&tstart, &tstop));
+	prepare_ST_time =  diff_time(&tstart, &tstop);
+	
+	
 	if(x == -1){
 		printf("\nERROR: Couldn't prepare ST(ms)\n");
 		return -1;
 	}
 
+	printf("OUTPUT:\n\n");
 	// mapReadsTest(tree);
 	gettimeofday(&tstart, NULL);
 	mapReads(tree);
 	gettimeofday(&tstop, NULL);
+	
+
+	printf("\n--------------------------------------------------------------------------------------------------\n\n");
+
+	printf("STATISTICS:\n\n");
+	// Input Statistics
+	printf("Length of Reference genome: %d\n", sequenceLength);
+	printf("Number of reads in the input: %d\n", totalReads);
+	printf("Execution time - ConstructST: %f(ms)\n",construct_ST_time);
+	printf("Execution time - PrepareST: %f(ms)\n",prepare_ST_time);
 	printf("Execution time - MapReads: %f (ms)\n", diff_time(&tstart, &tstop));
 
 	// printf("%d\n", countAlign);
